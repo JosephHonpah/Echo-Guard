@@ -1,3 +1,0 @@
-@echo off
-echo Checking Git version...
-powershell -ExecutionPolicy Bypass -File "%~dp0check-git.ps1"
