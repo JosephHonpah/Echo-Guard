@@ -1,43 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="EchoGuard - Voice-to-Text Compliance Logger"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoGuard - Voice-to-Text Compliance Logger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            color: #0066cc;
+        }
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .tagline {
+            font-style: italic;
+            color: #666;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #0066cc;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .upload-area {
+            border: 2px dashed #0066cc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .button {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0052a3;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">EchoGuard</div>
+        <div class="tagline">Voice-to-Text Compliance Logger</div>
+        <h1>🚀 NOW LIVE!</h1>
+    </header>
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>EchoGuard - Voice Compliance Logger</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    <div class="container">
+        <div class="card">
+            <h2>Login</h2>
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button class="button" onclick="showUpload()">Login</button>
+                <p><a href="#">Forgot password?</a> | <a href="#">Create account</a></p>
+            </div>
+        </div>
+    </div>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    <div id="upload-section" style="display: none;">
+        <div class="card">
+            <h2>Upload Audio Recording</h2>
+            <div class="upload-area" id="drop-area">
+                <p>Drag and drop audio files here</p>
+                <p>OR</p>
+                <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+                <button class="button" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                <p>Supported formats: MP3, WAV, M4A, FLAC</p>
+            </div>
+            <div class="form-group">
+                <label for="description">Description (optional):</label>
+                <input type="text" id="description" placeholder="Brief description of the recording">
+            </div>
+            <button class="button" onclick="simulateUpload()">Upload</button>
+        </div>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+        <div id="status-message" style="display: none;"></div>
+    </div>
+
+    <footer>
+        <p>EchoGuard &copy; 2025 | <a href="upload-guide.html">Upload Guide</a> | <a href="#">Help</a> | <a href="#">Privacy Policy</a></p>
+    </footer>
+
+    <script>
+        function showUpload() {
+            document.getElementById('upload-section').style.display = 'block';
+            window.scrollTo(0, document.getElementById('upload-section').offsetTop);
+        }
+
+        function simulateUpload() {
+            const statusMessage = document.getElementById('status-message');
+            statusMessage.className = 'status success';
+            statusMessage.innerHTML = '<strong>Upload successful!</strong> Your audio is being processed. This typically takes 1-3 minutes.';
+            statusMessage.style.display = 'block';
+            
+            // Simulate processing
+            setTimeout(() => {
+                statusMessage.innerHTML = '<strong>Processing complete!</strong> Your compliance score: 85/100. <a href="#">View detailed analysis</a>';
+            }, 3000);
+        }
+
+        // Drag and drop functionality
+        const dropArea = document.getElementById('drop-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = '#0066cc';
+            dropArea.style.backgroundColor = '#e6f7ff';
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = '#0066cc';
+            dropArea.style.backgroundColor = '#f8f9fa';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                const fileName = files[0].name;
+                dropArea.innerHTML = `<p>Selected file: ${fileName}</p>`;
+            }
+        }
+    </script>
+</body>
 </html>
