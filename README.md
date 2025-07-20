@@ -9,6 +9,7 @@ EchoGuard is a serverless application that transcribes audio recordings, analyze
 **Test Credentials**:
 - **Email**: test@example.com
 - **Password**: Test1234!
+But you can signup for new credentials using the sign up page.
 
 ## Features
 
