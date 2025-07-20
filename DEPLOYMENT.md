@@ -8,11 +8,12 @@ This guide provides detailed instructions for deploying EchoGuard to your AWS ac
 - AWS CLI installed and configured
 - Node.js and npm
 - Python 3.11
+- Kiro IDE
 
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/echoguard.git
+git clone https://github.com/JosephHonpah/Echo-Guard.git
 cd echoguard
 ```
 

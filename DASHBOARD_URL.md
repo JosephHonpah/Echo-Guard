@@ -28,12 +28,6 @@ The dashboard includes:
 - **User Info**: Shows your email address and logout option
 - **Compliance Overview**: Summary of your compliance metrics
 
-## Technical Details
-
-- **CloudFront Distribution**: E2B3ZARQ08OD5M
-- **Cognito User Pool**: us-east-1_q03tLrCfS
-- **App Client ID**: 4ks45uv9681eh9hnevrutksqru
-
 ## Notes
 
 - The dashboard is a fully functional frontend demo
