@@ -1,6 +1,0 @@
-{
-  "CloudFrontOriginAccessIdentityConfig": {
-    "CallerReference": "echoguard-frontend-oai",
-    "Comment": "OAI for EchoGuard Frontend"
-  }
-}
