@@ -10,6 +10,8 @@ EchoGuard is a serverless application that transcribes audio recordings, analyze
 - **Email**: test@example.com
 - **Password**: Test1234!
 
+But you can signup for new credentials using the sign up page.
+
 ## Features
 
 - **Audio Transcription**: Automatically transcribe audio recordings using Amazon Transcribe
@@ -134,6 +136,7 @@ Kiro AI provides specialized compliance analysis for financial conversations:
 ### Prerequisites
 
 - AWS Account
+- Kiro IDE
 - AWS CLI installed and configured
 - Node.js and npm
 - Python 3.11
@@ -143,7 +146,7 @@ Kiro AI provides specialized compliance analysis for financial conversations:
 
 1. **Clone the repository**:
    ```
-   git clone https://github.com/your-username/echoguard.git
+   git clone https://github.com/JosephHonpah/Echo-Guard.git
    cd echoguard
    ```
 
