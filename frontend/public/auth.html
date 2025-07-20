@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoGuard - Authentication</title>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.7/dist/amazon-cognito-identity.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        .container {
+            display: flex;
+            min-height: 80vh;
+            align-items: center;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .auth-header {
+            background-color: #0066cc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .auth-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .auth-tab.active {
+            border-bottom: 3px solid #0066cc;
+            color: #0066cc;
+        }
+        .auth-content {
+            padding: 30px;
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #0052a3;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .verification-form {
+            display: none;
+        }
+        .logo {
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            font-style: italic;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo">EchoGuard</div>
+                <div class="tagline">Voice-to-Text Compliance Logger</div>
+                <h1>Welcome to EchoGuard</h1>
+            </div>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="login-tab" onclick="switchTab('login')">Login</div>
+                <div class="auth-tab" id="signup-tab" onclick="switchTab('signup')">Sign Up</div>
+            </div>
+            
+            <div class="auth-content">
+                <!-- Login Form -->
+                <div class="auth-form active" id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email:</label>
+                        <input type="email" id="login-email" placeholder="Enter your email" value="test@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password:</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" value="Test1234!">
+                    </div>
+                    <button class="button" onclick="login()">Login</button>
+                    <div id="login-status" class="status" style="display: none;"></div>
+                </div>
+                
+                <!-- Signup Form -->
+                <div class="auth-form" id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-email">Email:</label>
+                        <input type="email" id="signup-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password:</label>
+                        <input type="password" id="signup-password" placeholder="Enter your password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password:</label>
+                        <input type="password" id="confirm-password" placeholder="Confirm your password">
+                    </div>
+                    <button class="button" onclick="signUp()">Sign Up</button>
+                    <div id="signup-status" class="status" style="display: none;"></div>
+                </div>
+                
+                <!-- Verification Form -->
+                <div class="auth-form verification-form" id="verification-form">
+                    <h2>Verify Your Email</h2>
+                    <div class="form-group">
+                        <label for="verification-code">Verification Code:</label>
+                        <input type="text" id="verification-code" placeholder="Enter verification code sent to your email">
+                    </div>
+                    <button class="button" onclick="verifyAccount()">Verify</button>
+                    <div id="verification-status" class="status" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AWS Cognito configuration
+        const poolData = {
+            UserPoolId: 'us-east-1_q03tLrCfS',
+            ClientId: '4ks45uv9681eh9hnevrutksqru'
+        };
+        
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        let cognitoUser;
+        
+        // Check if user is already logged in
+        window.onload = function() {
+            const cognitoUser = userPool.getCurrentUser();
+            if (cognitoUser != null) {
+                cognitoUser.getSession(function(err, session) {
+                    if (err) {
+                        return;
+                    }
+                    
+                    if (session.isValid()) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+        };
+        
+        function switchTab(tab) {
+            // Hide all forms
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('signup-form').classList.remove('active');
+            document.getElementById('verification-form').classList.remove('active');
+            
+            // Deactivate all tabs
+            document.getElementById('login-tab').classList.remove('active');
+            document.getElementById('signup-tab').classList.remove('active');
+            
+            // Show selected form and activate tab
+            if (tab === 'login') {
+                document.getElementById('login-form').classList.add('active');
+                document.getElementById('login-tab').classList.add('active');
+            } else if (tab === 'signup') {
+                document.getElementById('signup-form').classList.add('active');
+                document.getElementById('signup-tab').classList.add('active');
+            } else if (tab === 'verification') {
+                document.getElementById('verification-form').classList.add('active');
+                // Keep the signup tab active during verification
+                document.getElementById('signup-tab').classList.add('active');
+            }
+            
+            // Clear status messages
+            document.getElementById('login-status').style.display = 'none';
+            document.getElementById('signup-status').style.display = 'none';
+            document.getElementById('verification-status').style.display = 'none';
+        }
+        
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            const authenticationData = {
+                Username: email,
+                Password: password
+            };
+            
+            const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+            
+            const userData = {
+                Username: email,
+                Pool: userPool
+            };
+            
+            cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function(result) {
+                    showLoginMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to main page after successful login
+                    setTimeout(function() {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                },
+                onFailure: function(err) {
+                    showLoginMessage('Login failed: ' + err.message, 'error');
+                }
+            });
+        }
+        
+        function signUp() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                showSignupMessage('Passwords do not match', 'error');
+                return;
+            }
+            
+            const attributeList = [];
+            
+            const dataEmail = {
+                Name: 'email',
+                Value: email
+            };
+            
+            const attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
+            attributeList.push(attributeEmail);
+            
+            userPool.signUp(email, password, attributeList, null, function(err, result) {
+                if (err) {
+                    showSignupMessage('Sign up failed: ' + err.message, 'error');
+                    return;
+                }
+                
+                cognitoUser = result.user;
+                showSignupMessage('Sign up successful! Please check your email for a verification code.', 'success');
+                
+                // Store email for verification
+                document.getElementById('signup-email').setAttribute('data-email', email);
+                
+                // Show verification form
+                setTimeout(function() {
+                    switchTab('verification');
+                }, 1500);
+            });
+        }
+        
+        function verifyAccount() {
+            const verificationCode = document.getElementById('verification-code').value;
+            const email = document.getElementById('signup-email').getAttribute('data-email') || document.getElementById('signup-email').value;
+            
+            if (!cognitoUser) {
+                const userData = {
+                    Username: email,
+                    Pool: userPool
+                };
+                cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            }
+            
+            cognitoUser.confirmRegistration(verificationCode, true, function(err, result) {
+                if (err) {
+                    showVerificationMessage('Verification failed: ' + err.message, 'error');
+                    return;
+                }
+                
+                showVerificationMessage('Verification successful! You can now login.', 'success');
+                
+                // Switch back to login tab after successful verification
+                setTimeout(function() {
+                    switchTab('login');
+                }, 1500);
+            });
+        }
+        
+        function showLoginMessage(message, type) {
+            const statusMessage = document.getElementById('login-status');
+            statusMessage.className = 'status ' + type;
+            statusMessage.innerHTML = message;
+            statusMessage.style.display = 'block';
+        }
+        
+        function showSignupMessage(message, type) {
+            const statusMessage = document.getElementById('signup-status');
+            statusMessage.className = 'status ' + type;
+            statusMessage.innerHTML = message;
+            statusMessage.style.display = 'block';
+        }
+        
+        function showVerificationMessage(message, type) {
+            const statusMessage = document.getElementById('verification-status');
+            statusMessage.className = 'status ' + type;
+            statusMessage.innerHTML = message;
+            statusMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
