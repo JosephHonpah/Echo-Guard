@@ -1,0 +1,120 @@
+Description: EchoGuard Voice Compliance Backend
+
+Parameters:
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket containing Lambda function code
+    Default: echoguard-lambda-656570226565
+
+Resources:
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub echoguard-audio-${AWS::AccountId}-${AWS::Region}
+
+  TranscriptOutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub echoguard-transcripts-${AWS::AccountId}-${AWS::Region}
+
+  AuditLogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: EchoGuardAuditLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: callId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: callId
+          KeyType: HASH
+
+  ComplianceTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: EchoGuardComplianceAlerts
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EchoGuardLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonTranscribeFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+
+  LambdaStartTranscribe:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: StartTranscribe
+      Handler: start_transcribe.lambda_handler
+      Runtime: python3.11
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: start_transcribe.zip
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          TRANSCRIBE_OUTPUT_BUCKET: !Ref TranscriptOutputBucket
+
+  LambdaAnalyzeTranscript:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AnalyzeTranscript
+      Handler: analyze_transcript.lambda_handler
+      Runtime: python3.11
+      Timeout: 60
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: analyze_transcript.zip
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          AUDIT_TABLE: !Ref AuditLogTable
+          SNS_TOPIC: !Ref ComplianceTopic
+
+  StartTranscribePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaStartTranscribe
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt AudioBucket.Arn
+
+  AnalyzeTranscriptPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LambdaAnalyzeTranscript
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt TranscriptOutputBucket.Arn
+      
+  # We'll configure S3 notifications manually after deployment
+
+Outputs:
+  AudioBucketName:
+    Description: Name of the S3 bucket for audio uploads
+    Value: !Ref AudioBucket
+  
+  TranscriptBucketName:
+    Description: Name of the S3 bucket for transcription outputs
+    Value: !Ref TranscriptOutputBucket
+  
+  AuditTableName:
+    Description: Name of the DynamoDB table for audit logs
+    Value: !Ref AuditLogTable
+  
+  SNSTopicArn:
+    Description: ARN of the SNS topic for compliance alerts
+    Value: !Ref ComplianceTopic

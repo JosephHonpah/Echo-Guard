@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EchoGuard Architecture Diagram</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+        .diagram {
+            width: 900px;
+            height: 700px;
+            margin: 0 auto;
+            position: relative;
+            background-color: white;
+        }
+        .component {
+            position: absolute;
+            text-align: center;
+            font-size: 12px;
+        }
+        .component img {
+            width: 64px;
+            height: 64px;
+            display: block;
+            margin: 0 auto 5px;
+        }
+        .arrow {
+            position: absolute;
+            border-top: 2px solid #666;
+            width: 100px;
+            transform-origin: 0 0;
+        }
+        .arrow:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #666;
+        }
+        .label {
+            position: absolute;
+            font-size: 10px;
+            background-color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .layer {
+            position: absolute;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .layer-title {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background-color: white;
+            padding: 0 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram">
+        <!-- Layers -->
+        <div class="layer" style="left: 50px; top: 50px; width: 800px; height: 80px;">
+            <div class="layer-title">User Interface</div>
+        </div>
+        
+        <div class="layer" style="left: 50px; top: 150px; width: 800px; height: 80px;">
+            <div class="layer-title">Authentication</div>
+        </div>
+        
+        <div class="layer" style="left: 50px; top: 250px; width: 800px; height: 80px;">
+            <div class="layer-title">API Layer</div>
+        </div>
+        
+        <div class="layer" style="left: 50px; top: 350px; width: 800px; height: 100px;">
+            <div class="layer-title">Compute Layer</div>
+        </div>
+        
+        <div class="layer" style="left: 50px; top: 470px; width: 800px; height: 80px;">
+            <div class="layer-title">Storage Layer</div>
+        </div>
+        
+        <div class="layer" style="left: 50px; top: 570px; width: 800px; height: 80px;">
+            <div class="layer-title">AI/ML Services</div>
+        </div>
+        
+        <!-- Components -->
+        <!-- UI Layer -->
+        <div class="component" style="left: 400px; top: 70px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/AWS-Amplify_light-bg.c3fab38c0a2c0b1844c5c11d0d0800d775bca6e553767765276a24fbe4b29f6e.svg" alt="AWS Amplify">
+            <div>React.js Frontend</div>
+        </div>
+        
+        <!-- Authentication Layer -->
+        <div class="component" style="left: 200px; top: 170px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-Cognito_light-bg.4c29b7bcd2c750b38c1a3a5ac4464d4d9b3ad792.svg" alt="Amazon Cognito">
+            <div>Amazon Cognito</div>
+        </div>
+        
+        <div class="component" style="left: 400px; top: 170px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/AWS-Identity-and-Access-Management_IAM_light-bg.a4baa7d0d4a8b67eb3fcbc7b940e12a1e9b3ee7f.svg" alt="IAM">
+            <div>IAM Roles</div>
+        </div>
+        
+        <!-- API Layer -->
+        <div class="component" style="left: 400px; top: 270px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-API-Gateway_light-bg.83e7ca4b3cb170e33eeaff3e58b94d8b094929bf.svg" alt="API Gateway">
+            <div>Amazon API Gateway</div>
+        </div>
+        
+        <!-- Compute Layer -->
+        <div class="component" style="left: 200px; top: 380px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/AWS-Lambda_light-bg.c3815f9f81782c1eba13c834f96a6a70c7f8a529.svg" alt="Lambda">
+            <div>API Lambda</div>
+        </div>
+        
+        <div class="component" style="left: 400px; top: 380px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/AWS-Lambda_light-bg.c3815f9f81782c1eba13c834f96a6a70c7f8a529.svg" alt="Lambda">
+            <div>StartTranscribe Lambda</div>
+        </div>
+        
+        <div class="component" style="left: 600px; top: 380px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/AWS-Lambda_light-bg.c3815f9f81782c1eba13c834f96a6a70c7f8a529.svg" alt="Lambda">
+            <div>AnalyzeTranscript Lambda</div>
+        </div>
+        
+        <!-- Storage Layer -->
+        <div class="component" style="left: 200px; top: 490px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-S3_light-bg.4c66a4b58a0a5c3a739d8ead642b2b13b609d39f.svg" alt="S3">
+            <div>Audio Bucket</div>
+        </div>
+        
+        <div class="component" style="left: 400px; top: 490px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-S3_light-bg.4c66a4b58a0a5c3a739d8ead642b2b13b609d39f.svg" alt="S3">
+            <div>Transcript Bucket</div>
+        </div>
+        
+        <div class="component" style="left: 600px; top: 490px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-DynamoDB_light-bg.0c655d8f9e36e9b7e5b709e7eaf84b67e8a1c4ab.svg" alt="DynamoDB">
+            <div>DynamoDB Audit Log</div>
+        </div>
+        
+        <!-- AI/ML Layer -->
+        <div class="component" style="left: 300px; top: 590px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-Transcribe_light-bg.b0a3a4c3f1c1290a3e3a3d6f8ded6ceb8a26a1d7.svg" alt="Transcribe">
+            <div>Amazon Transcribe</div>
+        </div>
+        
+        <div class="component" style="left: 500px; top: 590px;">
+            <img src="https://d1.awsstatic.com/icons/aws-icons/Amazon-Bedrock_light-bg.1e8fbdc8c5a1d8f2d1b6d1b1d1b1d1b1d1b1d1b1.svg" alt="Bedrock">
+            <div>Amazon Bedrock</div>
+        </div>
+        
+        <!-- Add a title -->
+        <div style="position: absolute; top: 10px; left: 300px; font-size: 20px; font-weight: bold;">
+            EchoGuard Architecture
+        </div>
+    </div>
+</body>
+</html>

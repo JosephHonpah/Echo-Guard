@@ -1,0 +1,22 @@
+{
+  "PoolName": "EchoGuardUserPool",
+  "AutoVerifiedAttributes": ["email"],
+  "UsernameAttributes": ["email"],
+  "Policies": {
+    "PasswordPolicy": {
+      "MinimumLength": 8,
+      "RequireUppercase": true,
+      "RequireLowercase": true,
+      "RequireNumbers": true,
+      "RequireSymbols": false
+    }
+  },
+  "Schema": [
+    {
+      "Name": "email",
+      "Required": true,
+      "Mutable": true
+    }
+  ],
+  "MfaConfiguration": "OFF"
+}
