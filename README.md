@@ -63,6 +63,7 @@ EchoGuard uses a serverless architecture built on AWS:
 ### Prerequisites
 
 - AWS Account
+- Kiro IDE
 - AWS CLI installed and configured
 - Node.js and npm
 - Python 3.11
@@ -71,7 +72,7 @@ EchoGuard uses a serverless architecture built on AWS:
 
 1. **Clone the repository**:
    ```
-   git clone https://github.com/your-username/echoguard.git
+   git clone https://github.com/JosephHonpah/Echo-Guard.git
    cd echoguard
    ```
 
