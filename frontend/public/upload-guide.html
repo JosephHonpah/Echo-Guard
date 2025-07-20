@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoGuard - How to Upload Recordings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #0066cc;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 30px;
+        }
+        .step {
+            background-color: #f5f5f5;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .tip {
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .warning {
+            background-color: #fff7e6;
+            border-left: 4px solid #fa8c16;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <h1>How to Upload Recordings to EchoGuard</h1>
+    
+    <p>This guide will walk you through the process of uploading audio recordings to EchoGuard for compliance analysis.</p>
+    
+    <div class="step">
+        <h3>Step 1: Log in to EchoGuard</h3>
+        <p>Visit <a href="https://echoguard-frontend-656570226565.s3-website-us-east-1.amazonaws.com">EchoGuard</a> and log in with your credentials.</p>
+        <p>If you don't have an account yet, click "Create Account" and follow the registration process.</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 2: Navigate to the Upload Page</h3>
+        <p>Once logged in, click on the "Upload" button in the navigation menu.</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 3: Select Audio File</h3>
+        <p>Click the "Choose File" button or drag and drop your audio file into the designated area.</p>
+        
+        <div class="tip">
+            <strong>Tip:</strong> EchoGuard supports MP3, WAV, M4A, and FLAC audio formats. Files should be under 100MB.
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Step 4: Add Metadata (Optional)</h3>
+        <p>You can add additional information about your recording:</p>
+        <ul>
+            <li><strong>Description:</strong> Brief description of the recording content</li>
+            <li><strong>Category:</strong> Select a category (e.g., Customer Call, Meeting)</li>
+            <li><strong>Tags:</strong> Add relevant tags to help with organization</li>
+        </ul>
+    </div>
+    
+    <div class="step">
+        <h3>Step 5: Upload</h3>
+        <p>Click the "Upload" button to start the upload process.</p>
+        <p>A progress bar will appear showing the upload status.</p>
+        
+        <div class="warning">
+            <strong>Important:</strong> Do not close the browser window until the upload is complete.
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Step 6: Wait for Processing</h3>
+        <p>After the upload completes, EchoGuard will:</p>
+        <ol>
+            <li>Transcribe the audio (typically takes 1-3 minutes)</li>
+            <li>Analyze the transcript for compliance issues (typically takes 30-60 seconds)</li>
+            <li>Generate a compliance report</li>
+        </ol>
+        <p>You'll be redirected to the dashboard where you can see the processing status.</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 7: View Results</h3>
+        <p>Once processing is complete, click on the recording to view:</p>
+        <ul>
+            <li>Full transcript of the audio</li>
+            <li>Overall compliance score</li>
+            <li>Specific compliance issues detected</li>
+            <li>Recommendations for improvement</li>
+            <li>Dual AI analysis results</li>
+        </ul>
+    </div>
+    
+    <h2>Troubleshooting</h2>
+    
+    <div class="tip">
+        <p><strong>Upload fails:</strong> Ensure your file is in a supported format and under 100MB.</p>
+        <p><strong>Processing takes too long:</strong> Large files may take longer to process. Check back in 5-10 minutes.</p>
+        <p><strong>Audio quality issues:</strong> For best results, use clear recordings with minimal background noise.</p>
+    </div>
+    
+    <h2>Need Help?</h2>
+    <p>Contact our support team at support@echoguard.example.com or use the in-app chat feature.</p>
+    
+    <a href="https://echoguard-frontend-656570226565.s3-website-us-east-1.amazonaws.com" class="button">Go to EchoGuard</a>
+</body>
+</html>
