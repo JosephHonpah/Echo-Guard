@@ -54,26 +54,7 @@ The EchoGuard project consists of:
 - View simulated compliance analysis
 - Check compliance scores
 
-## Cleanup Tasks
-
-The following files are no longer needed and can be removed:
-
-1. **Duplicate Documentation**:
-   - `LIVE_URL.md`
-   - `LIVE_URL_WITH_COGNITO.md`
-   - `DIRECT_CLOUDFRONT_URL.md`
-   - `HTTPS_PUBLIC_URL.md`
-   - `COMBINED_AUTH_URL.md`
-
-2. **Obsolete Frontend Files**:
-   - `frontend/public/cognito-auth.html`
-   - `frontend/public/signup.html`
-
-3. **Temporary Configuration Files**:
-   - `cloudfront-config.json`
-   - `cloudfront-s3-origin-access-identity.json`
-
-## Next Steps
+ ## Next Steps
 
 1. **Complete Backend Implementation**:
    - Implement actual audio processing with Amazon Transcribe
