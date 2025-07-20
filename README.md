@@ -12,6 +12,8 @@ EchoGuard is a serverless application that transcribes audio recordings, analyze
 
 But you can signup for new credentials using the sign up page.
 
+**Note**: In the current demo, file uploads are simulated and no actual audio processing occurs. The dashboard shows example compliance results for demonstration purposes.
+
 ## Features
 
 - **Audio Transcription**: Automatically transcribe audio recordings using Amazon Transcribe
@@ -71,12 +73,14 @@ This serverless architecture ensures scalability, cost-efficiency, and real-time
    - Add an optional description
    - Click "Upload" to process the recording
    - Wait for the compliance analysis to complete
+   - *Note: In the current demo, this process is simulated*
 
 4. **View Compliance Results**:
    - Return to the Dashboard tab to see all recordings
    - Click on any recording to view detailed analysis
    - Check compliance scores and identified issues
    - Review recommendations for improvement
+   - *Note: The current demo shows example results for demonstration purposes*
 
 ## Architecture
 
