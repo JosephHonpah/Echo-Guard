@@ -19,6 +19,38 @@ EchoGuard is a serverless application that transcribes audio recordings, analyze
 - **Secure Authentication**: User management with Amazon Cognito
 - **Enhanced Compliance**: Specialized financial compliance checks with Kiro AI
 
+## How It Works
+
+EchoGuard follows a streamlined workflow for processing audio recordings:
+
+1. **Upload Process**:
+   - User uploads an audio file through the web interface
+   - File is stored in an S3 bucket with appropriate metadata
+   - Upload event triggers a Lambda function
+
+2. **Transcription**:
+   - Lambda function initiates an Amazon Transcribe job
+   - Transcribe processes the audio and generates a text transcript
+   - Completion notification is sent via SNS
+
+3. **AI Analysis**:
+   - Transcript is analyzed by two AI systems in parallel:
+     - Amazon Bedrock for general compliance analysis
+     - Kiro AI for specialized financial compliance checks
+   - Both systems identify potential compliance issues and assign risk scores
+
+4. **Results Processing**:
+   - Analysis results are combined and stored in DynamoDB
+   - Compliance score is calculated based on weighted factors
+   - High-risk issues trigger alerts via SNS
+
+5. **Dashboard Display**:
+   - User views results in the dashboard
+   - Recordings are listed with compliance scores
+   - Detailed view shows specific issues and recommendations
+
+This serverless architecture ensures scalability, cost-efficiency, and real-time processing of audio recordings.
+
 ## How to Use
 
 1. **Authentication**:
@@ -56,6 +88,47 @@ EchoGuard uses a serverless architecture built on AWS:
 - **AI/ML**: Amazon Transcribe + Amazon Bedrock + Kiro AI
 - **Content Delivery**: Amazon CloudFront
 
+## Kiro AI Integration
+
+EchoGuard leverages Kiro AI for specialized financial compliance analysis:
+
+### Installing Kiro IDE
+
+1. **Download Kiro IDE**:
+   - Visit [Kiro AI Developer Portal](https://developer.kiro.ai)
+   - Register for a developer account
+   - Download the Kiro IDE for your platform (Windows, macOS, Linux)
+
+2. **Configure Kiro IDE**:
+   - Install the IDE following the provided instructions
+   - Launch the IDE and sign in with your developer credentials
+   - Create a new project or open the EchoGuard project
+
+3. **Set Up Kiro API Keys**:
+   - Generate API keys from the Kiro Developer Portal
+   - Add the keys to your project configuration
+   - Test the connection to Kiro AI services
+
+4. **Deploy Kiro Models**:
+   ```
+   cd backend
+   ./deploy-kiro.bat
+   ```
+   Or on Linux/Mac:
+   ```
+   ./deploy-kiro.sh
+   ```
+
+### Using Kiro AI in EchoGuard
+
+Kiro AI provides specialized compliance analysis for financial conversations:
+
+- **Financial Regulations**: Checks for compliance with financial regulations
+- **Disclosure Requirements**: Identifies missing required disclosures
+- **Risk Assessment**: Evaluates risk levels in financial advice
+- **Terminology Analysis**: Flags problematic financial terminology
+- **Recommendation Compliance**: Ensures financial recommendations meet regulatory standards
+
 ## Deployment Guide
 
 ### Prerequisites
@@ -64,6 +137,7 @@ EchoGuard uses a serverless architecture built on AWS:
 - AWS CLI installed and configured
 - Node.js and npm
 - Python 3.11
+- Kiro IDE (for Kiro AI integration)
 
 ### Quick Deployment
 
