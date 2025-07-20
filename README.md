@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # EchoGuard: Voice-to-Text Compliance Logger 🚀 NOW LIVE!
 
 EchoGuard is a serverless application that transcribes audio recordings, analyzes them for compliance issues using AI, and provides a dashboard for monitoring compliance metrics.
@@ -147,3 +148,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+=======
+# Echo-Guard
+Voice-to-Text Compliance Logger built on AWS
+>>>>>>> e6eb7a0eb49626275faf3008623c4003f6fb354f
