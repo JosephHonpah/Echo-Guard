@@ -249,6 +249,12 @@
                         // Display user email
                         document.getElementById('user-email').textContent = cognitoUser.username;
                         document.getElementById('settings-email').textContent = cognitoUser.username;
+                        
+                        // Setup drag and drop functionality
+                        setupDragAndDrop();
+                        
+                        // Initialize compliance overview
+                        updateComplianceOverview();
                     } else {
                         window.location.href = 'auth.html';
                     }
@@ -325,14 +331,117 @@
         }
         
         function simulateUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const description = document.getElementById('description').value || 'Audio Recording';
             const uploadStatus = document.getElementById('upload-status');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                uploadStatus.style.display = 'block';
+                uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #f8d7da; color: #721c24; border-radius: 5px;">Please select a file to upload.</div>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const fileName = file.name;
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2); // Convert to MB
+            const fileType = file.type;
+            const uploadDate = new Date().toLocaleDateString();
+            
             uploadStatus.style.display = 'block';
             uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Upload successful! Your audio is being processed. This typically takes 1-3 minutes.</div>';
             
-            // Simulate processing
+            // Create a new recording card
             setTimeout(() => {
-                uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Processing complete! Your compliance score: 85/100. <a href="#" onclick="switchTab(\'dashboard\')">View detailed analysis</a></div>';
+                // Generate a random compliance score between 60 and 95
+                const complianceScore = Math.floor(Math.random() * 36) + 60;
+                let scoreClass = 'low';
+                if (complianceScore >= 80) {
+                    scoreClass = 'high';
+                } else if (complianceScore >= 70) {
+                    scoreClass = 'medium';
+                }
+                
+                // Create new recording card
+                const recordingsContainer = document.querySelector('.recordings');
+                const newRecording = document.createElement('div');
+                newRecording.className = 'recording-card';
+                newRecording.innerHTML = `
+                    <div class="recording-title">${description}</div>
+                    <div class="recording-date">${uploadDate}</div>
+                    <div>File: ${fileName} (${fileSize} MB)</div>
+                    <div class="compliance-score ${scoreClass}">Compliance: ${complianceScore}%</div>
+                `;
+                
+                // Add to the beginning of the list
+                recordingsContainer.insertBefore(newRecording, recordingsContainer.firstChild);
+                
+                // Update compliance overview
+                updateComplianceOverview();
+                
+                // Show completion message
+                uploadStatus.innerHTML = `<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Processing complete! Your compliance score: ${complianceScore}/100. <a href="#" onclick="switchTab('dashboard')">View detailed analysis</a></div>`;
+                
+                // Reset the upload form
+                document.getElementById('drop-area').innerHTML = `
+                    <p>Drag and drop audio files here</p>
+                    <p>OR</p>
+                    <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+                    <button class="button" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                    <p>Supported formats: MP3, WAV, M4A, FLAC</p>
+                `;
+                document.getElementById('description').value = '';
+                
+                // Reattach event listeners for drag and drop
+                setupDragAndDrop();
             }, 3000);
+        }
+        
+        function updateComplianceOverview() {
+            // Get all recordings
+            const recordings = document.querySelectorAll('.recording-card');
+            
+            // Calculate average compliance score
+            let totalScore = 0;
+            let issueCount = 0;
+            
+            recordings.forEach(recording => {
+                const scoreText = recording.querySelector('.compliance-score').textContent;
+                const score = parseInt(scoreText.match(/\d+/)[0]);
+                totalScore += score;
+                
+                if (score < 70) {
+                    issueCount++;
+                }
+            });
+            
+            const averageScore = Math.round(totalScore / recordings.length);
+            
+            // Update the compliance overview
+            const overviewCard = document.querySelector('#dashboard .card:nth-child(2)');
+            overviewCard.innerHTML = `
+                <h2>Compliance Overview</h2>
+                <p>Your average compliance score: <strong>${averageScore}%</strong></p>
+                <p>Total recordings analyzed: <strong>${recordings.length}</strong></p>
+                <p>Recordings with issues: <strong>${issueCount}</strong></p>
+            `;
+        }
+        
+        function setupDragAndDrop() {
+            const dropArea = document.getElementById('drop-area');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            dropArea.addEventListener('drop', handleDrop, false);
         }
     </script>
 </body>
