@@ -1,7 +1,5 @@
 {
   "PoolName": "EchoGuardUserPool",
-  "AutoVerifiedAttributes": ["email"],
-  "UsernameAttributes": ["email"],
   "Policies": {
     "PasswordPolicy": {
       "MinimumLength": 8,
@@ -11,12 +9,10 @@
       "RequireSymbols": false
     }
   },
-  "Schema": [
-    {
-      "Name": "email",
-      "Required": true,
-      "Mutable": true
-    }
-  ],
-  "MfaConfiguration": "OFF"
+  "AutoVerifiedAttributes": ["email"],
+  "UsernameAttributes": ["email"],
+  "MfaConfiguration": "OFF",
+  "AdminCreateUserConfig": {
+    "AllowAdminCreateUserOnly": false
+  }
 }
