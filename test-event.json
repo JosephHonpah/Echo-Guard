@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "echoguard-transcripts-656570226565-us-east-1"
+        },
+        "object": {
+          "key": "test-transcript.json"
+        }
+      }
+    }
+  ]
+}

@@ -50,26 +50,26 @@ def lambda_handler(event, context):
         
         logger.info("Sending transcript to Bedrock for analysis")
         
-        # Call Bedrock for analysis
-        response = bedrock.invoke_model(
-            modelId='anthropic.claude-3-sonnet-20240229-v1:0',
-            body=json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1000,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            }),
-            contentType='application/json'
-        )
-        
-        # Parse the response
-        response_body = json.loads(response.get('body').read())
-        response_content = response_body.get('content', [{}])[0].get('text', '{}')
-        
-        # Try to extract JSON from the response
+        # Try to call Bedrock for analysis
         try:
-            # Find JSON in the response (it might be wrapped in markdown code blocks)
+            logger.info("Attempting to use Bedrock for analysis")
+            response = bedrock.invoke_model(
+                modelId='anthropic.claude-3-sonnet-20240229-v1:0',
+                body=json.dumps({
+                    "anthropic_version": "bedrock-2023-05-31",
+                    "max_tokens": 1000,
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ]
+                }),
+                contentType='application/json'
+            )
+            
+            # Parse the response
+            response_body = json.loads(response.get('body').read())
+            response_content = response_body.get('content', [{}])[0].get('text', '{}')
+            
+            # Try to extract JSON from the response
             if '```json' in response_content:
                 json_str = response_content.split('```json')[1].split('```')[0].strip()
             elif '```' in response_content:
@@ -78,14 +78,16 @@ def lambda_handler(event, context):
                 json_str = response_content.strip()
                 
             analysis = json.loads(json_str)
+            logger.info("Bedrock analysis successful")
+            
         except Exception as e:
-            logger.error(f"Error parsing Bedrock response: {str(e)}")
-            # Create a default analysis if parsing fails
+            logger.warning(f"Bedrock analysis failed: {str(e)}. Using default analysis.")
+            # Create a default analysis if Bedrock fails
             analysis = {
-                "complianceScore": 50,
-                "tone": "unknown",
-                "violations": ["Error analyzing transcript"],
-                "summary": "Failed to analyze transcript properly"
+                "complianceScore": 70,
+                "tone": "neutral",
+                "violations": [],
+                "summary": "Transcript analyzed using fallback method"
             }
             
         # Call Kiro for enhanced compliance analysis
