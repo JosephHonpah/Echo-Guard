@@ -2,7 +2,9 @@
 
 ## Accessing EchoGuard
 
-EchoGuard is available at: `https://echoguard-frontend-656570226565.s3-website-us-east-1.amazonaws.com`
+After deployment, EchoGuard will be available at your configured frontend URL.
+
+**Note:** Your system administrator will provide the specific URL for your EchoGuard instance.
 
 ## User Registration and Login
 

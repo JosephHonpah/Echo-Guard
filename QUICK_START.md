@@ -2,7 +2,7 @@
 
 ## Access EchoGuard
 
-**URL**: `https://echoguard-frontend-656570226565.s3-website-us-east-1.amazonaws.com`
+**URL**: Contact your administrator for the EchoGuard URL specific to your organization
 
 ## First-Time Setup
 
