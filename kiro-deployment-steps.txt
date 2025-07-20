@@ -1,0 +1,33 @@
+Kiro Integration Deployment Steps
+===============================
+
+Step 1: Upload Lambda package to S3
+----------------------------------
+# Replace YOUR_ACCOUNT_ID with your actual AWS account ID
+# Replace YOUR_REGION with your AWS region (e.g., us-east-1)
+
+aws s3 cp backend\lambda\analyze_transcript.zip s3://echoguard-lambda-656570226565/
+
+
+Step 2: Update CloudFormation stack
+----------------------------------
+# Using mock Kiro service (no API key needed)
+
+cd backend
+aws cloudformation update-stack --stack-name echoguard-backend ^
+  --template-body file://infrastructure.yaml ^
+  --capabilities CAPABILITY_NAMED_IAM ^
+  --parameters ParameterKey=LambdaCodeBucket,ParameterValue=echoguard-lambda-656570226565
+
+
+Alternative: Update Lambda function directly
+------------------------------------------
+# If you just want to update the Lambda function without changing the CloudFormation stack:
+
+aws lambda update-function-code ^
+  --function-name AnalyzeTranscript ^
+  --s3-bucket echoguard-lambda-656570226565 ^
+  --s3-key analyze_transcript.zip ^
+  --region YOUR_REGION
+
+# Then manually add the KIRO_API_KEY environment variable in the Lambda console

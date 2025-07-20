@@ -5,11 +5,6 @@ Parameters:
     Type: String
     Description: S3 bucket containing Lambda function code
     Default: echoguard-lambda-656570226565
-  
-  KiroApiKey:
-    Type: String
-    Description: API Key for Kiro AI compliance service
-    NoEcho: true
 
 Resources:
   AudioBucket:
@@ -88,8 +83,6 @@ Resources:
         Variables:
           AUDIT_TABLE: !Ref AuditLogTable
           SNS_TOPIC: !Ref ComplianceTopic
-          KIRO_API_KEY: !Ref KiroApiKey
-          KIRO_API_ENDPOINT: "https://api.kiro.ai/v1"
           INDUSTRY_TYPE: "financial"
 
   StartTranscribePermission:

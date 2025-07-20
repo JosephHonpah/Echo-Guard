@@ -59,10 +59,8 @@ EchoGuard uses a serverless architecture built on AWS:
 3. Deploy CloudFormation stack:
    ```
    cd backend
-   aws cloudformation deploy --template-file infrastructure.yaml --stack-name echoguard-backend --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaCodeBucket=echoguard-lambda-YOUR_ACCOUNT_ID KiroApiKey=YOUR_KIRO_API_KEY
+   aws cloudformation deploy --template-file infrastructure.yaml --stack-name echoguard-backend --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaCodeBucket=echoguard-lambda-YOUR_ACCOUNT_ID
    ```
-   
-   > Note: You'll need to obtain a Kiro API key from [kiro.ai](https://kiro.ai)
 
 4. Deploy API:
    ```

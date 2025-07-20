@@ -1,61 +1,68 @@
 """
-Kiro Integration Module for EchoGuard
-Provides enhanced compliance analysis capabilities
+Kiro Integration Module for EchoGuard (Mock Version)
+Provides enhanced compliance analysis capabilities using a local mock
 """
 import json
 import os
 import boto3
-import requests
+import time
+import re
 from botocore.exceptions import ClientError
 
-# Kiro API configuration
-KIRO_API_ENDPOINT = os.environ.get('KIRO_API_ENDPOINT', 'https://api.kiro.ai/v1')
-KIRO_API_KEY = os.environ.get('KIRO_API_KEY')
+# Mock Kiro configuration
+INDUSTRY_TYPE = os.environ.get('INDUSTRY_TYPE', 'financial')
 
 def analyze_compliance(transcript_text, metadata=None):
     """
-    Analyze transcript for compliance issues using Kiro AI
+    Analyze transcript for compliance issues using mock Kiro AI
     
     Args:
         transcript_text (str): The transcript text to analyze
         metadata (dict): Additional metadata about the audio recording
         
     Returns:
-        dict: Compliance analysis results from Kiro
+        dict: Compliance analysis results from mock Kiro
     """
-    if not KIRO_API_KEY:
-        raise ValueError("KIRO_API_KEY environment variable not set")
+    print("Using mock Kiro service for compliance analysis")
     
-    # Prepare request payload
-    payload = {
-        "text": transcript_text,
-        "analysis_type": "compliance",
-        "industry": os.environ.get('INDUSTRY_TYPE', 'financial'),
+    # Simple analysis based on keywords
+    compliance_issues = []
+    recommendations = []
+    
+    # Financial compliance keywords
+    financial_keywords = {
+        "guarantee": "Potential guarantee of returns or performance",
+        "promise": "Promises of specific returns may violate regulations",
+        "risk-free": "Misrepresentation of investment risks",
+        "guaranteed": "Claims of guaranteed returns may be misleading",
+        "free money": "Misrepresentation of financial products",
+        "secret": "Non-transparent financial advice",
+        "insider": "Potential reference to insider trading",
+        "loophole": "Suggesting regulatory avoidance",
+        "tax-free": "Potentially misleading tax claims",
+        "off the books": "Suggestion of improper accounting"
+    }
+    
+    # Check for compliance issues
+    compliance_score = 100
+    for keyword, issue in financial_keywords.items():
+        if re.search(r'\b' + keyword + r'\b', transcript_text.lower()):
+            compliance_issues.append(issue)
+            recommendations.append(f"Avoid using term '{keyword}' in customer communications")
+            compliance_score -= 10
+    
+    # Ensure score stays in valid range
+    compliance_score = max(0, min(100, compliance_score))
+    
+    # Generate mock response
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "compliance_score": compliance_score,
+        "industry": INDUSTRY_TYPE,
+        "findings": compliance_issues if compliance_issues else ["No compliance issues detected"],
+        "recommendations": recommendations if recommendations else ["Continue maintaining compliance standards"],
         "metadata": metadata or {}
     }
-    
-    # Set headers with API key
-    headers = {
-        "Authorization": f"Bearer {KIRO_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    try:
-        # Make API request to Kiro
-        response = requests.post(
-            f"{KIRO_API_ENDPOINT}/analyze",
-            headers=headers,
-            json=payload
-        )
-        response.raise_for_status()
-        
-        # Parse and return results
-        return response.json()
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Error calling Kiro API: {str(e)}")
-        # Fallback to Bedrock if Kiro fails
-        return None
 
 def store_kiro_results(analysis_id, kiro_results):
     """
