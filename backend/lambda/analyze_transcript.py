@@ -5,6 +5,9 @@ import uuid
 import logging
 from datetime import datetime
 
+# Import Kiro integration
+import kiro_integration
+
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -84,6 +87,28 @@ def lambda_handler(event, context):
                 "violations": ["Error analyzing transcript"],
                 "summary": "Failed to analyze transcript properly"
             }
+            
+        # Call Kiro for enhanced compliance analysis
+        try:
+            logger.info("Sending transcript to Kiro for enhanced compliance analysis")
+            metadata = {
+                "job_name": job_name,
+                "source": "amazon_transcribe"
+            }
+            kiro_results = kiro_integration.analyze_compliance(transcript, metadata)
+            
+            if kiro_results:
+                # Enhance the analysis with Kiro results
+                analysis["kiroScore"] = kiro_results.get("compliance_score")
+                analysis["kiroFindings"] = kiro_results.get("findings")
+                analysis["kiroRecommendations"] = kiro_results.get("recommendations")
+                logger.info(f"Kiro analysis complete: {json.dumps(kiro_results)}")
+            else:
+                logger.warning("Kiro analysis failed or returned no results")
+                
+        except Exception as e:
+            logger.error(f"Error during Kiro analysis: {str(e)}")
+            # Continue with just the Bedrock analysis
         
         logger.info(f"Analysis results: {json.dumps(analysis)}")
         
@@ -101,7 +126,11 @@ def lambda_handler(event, context):
             'flags': analysis.get('violations', []),
             'summary': analysis.get('summary', ''),
             'transcriptBucket': bucket,
-            'transcriptKey': key
+            'transcriptKey': key,
+            # Add Kiro-specific fields if available
+            'kiroScore': analysis.get('kiroScore'),
+            'kiroFindings': analysis.get('kiroFindings'),
+            'kiroRecommendations': analysis.get('kiroRecommendations')
         }
         
         table.put_item(Item=item)

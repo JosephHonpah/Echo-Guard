@@ -7,10 +7,11 @@ EchoGuard is a serverless application that transcribes audio recordings, analyze
 ## Features
 
 - **Audio Transcription**: Automatically transcribe audio recordings using Amazon Transcribe
-- **AI Compliance Analysis**: Analyze transcripts for compliance issues using Amazon Bedrock
+- **Dual AI Compliance Analysis**: Analyze transcripts using both Amazon Bedrock and Kiro AI
 - **Real-time Alerts**: Get notified of potential compliance violations
 - **Compliance Dashboard**: Monitor compliance metrics and trends
 - **Secure Authentication**: User management with Amazon Cognito
+- **Enhanced Compliance**: Specialized financial compliance checks with Kiro AI
 
 ## Architecture
 
@@ -28,7 +29,7 @@ EchoGuard uses a serverless architecture built on AWS:
 - **API**: Amazon API Gateway + Lambda
 - **Processing**: AWS Lambda functions
 - **Storage**: Amazon S3 + DynamoDB
-- **AI/ML**: Amazon Transcribe + Amazon Bedrock
+- **AI/ML**: Amazon Transcribe + Amazon Bedrock + Kiro AI
 
 ## Deployment Guide
 
@@ -58,8 +59,10 @@ EchoGuard uses a serverless architecture built on AWS:
 3. Deploy CloudFormation stack:
    ```
    cd backend
-   aws cloudformation deploy --template-file infrastructure.yaml --stack-name echoguard-backend --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaCodeBucket=echoguard-lambda-YOUR_ACCOUNT_ID
+   aws cloudformation deploy --template-file infrastructure.yaml --stack-name echoguard-backend --capabilities CAPABILITY_NAMED_IAM --parameter-overrides LambdaCodeBucket=echoguard-lambda-YOUR_ACCOUNT_ID KiroApiKey=YOUR_KIRO_API_KEY
    ```
+   
+   > Note: You'll need to obtain a Kiro API key from [kiro.ai](https://kiro.ai)
 
 4. Deploy API:
    ```
