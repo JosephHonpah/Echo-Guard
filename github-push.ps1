@@ -44,8 +44,8 @@ Write-Host "Initializing Git repository..."
 
 # Configure Git user for JosephHonpah
 & $gitExe config user.name "JosephHonpah"
-Write-Host "Enter your email address:"
-$email = Read-Host
+$email = "honpahj@gmail.com"
+Write-Host "Using email: $email"
 & $gitExe config user.email $email
 
 # Add all files
