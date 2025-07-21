@@ -1,18 +1,5 @@
 {
-  "PoolName": "EchoGuardUserPool",
-  "Policies": {
-    "PasswordPolicy": {
-      "MinimumLength": 8,
-      "RequireUppercase": true,
-      "RequireLowercase": true,
-      "RequireNumbers": true,
-      "RequireSymbols": false
-    }
-  },
-  "AutoVerifiedAttributes": ["email"],
-  "UsernameAttributes": ["email"],
-  "MfaConfiguration": "OFF",
-  "AdminCreateUserConfig": {
-    "AllowAdminCreateUserOnly": false
-  }
+  "UserPoolId": "us-east-1_s8Kk4WRpo",
+  "ClientId": "5feka1pptsb57glg092tcefr3p",
+  "UserPoolArn": "arn:aws:cognito-idp:us-east-1:656570226565:userpool/us-east-1_s8Kk4WRpo"
 }

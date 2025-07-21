@@ -6,11 +6,12 @@
 
 // API configuration
 const API_CONFIG = {
-  // Replace with your actual API URL when deployed
-  apiUrl: 'https://api.echoguard.example.com/dev',
+  // Real API URL from CloudFormation deployment
+  apiUrl: 'https://nqfzeccch0.execute-api.us-east-1.amazonaws.com/dev',
   
   // For demo mode, set to true to use simulated responses
-  demoMode: true
+  // Set to false to use the real backend
+  demoMode: true // Keep as true for now until backend is fully tested
 };
 
 /**
