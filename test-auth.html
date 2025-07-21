@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoGuard API Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.7/dist/amazon-cognito-identity.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>EchoGuard API Test</h1>
+    
+    <div class="container">
+        <h2>Authentication</h2>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="test@example.com">
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="Test1234!">
+        </div>
+        <button onclick="login()">Login</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="container">
+        <h2>API Test</h2>
+        <button onclick="getRecordings()">Get Recordings</button>
+        <button onclick="testUpload()">Test Upload</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <script>
+        // Cognito configuration
+        const poolData = {
+            UserPoolId: 'us-east-1_s8Kk4WRpo',
+            ClientId: '5feka1pptsb57glg092tcefr3p'
+        };
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        let idToken = null;
+        
+        // Login function
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const authResult = document.getElementById('auth-result');
+            
+            const authenticationData = {
+                Username: email,
+                Password: password
+            };
+            
+            const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+            
+            const userData = {
+                Username: email,
+                Pool: userPool
+            };
+            
+            const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function(result) {
+                    idToken = result.getIdToken().getJwtToken();
+                    authResult.innerHTML = `<p style="color: green;">Authentication successful!</p>
+                        <pre>${JSON.stringify({
+                            idToken: idToken.substring(0, 20) + '...',
+                            accessToken: result.getAccessToken().getJwtToken().substring(0, 20) + '...',
+                            refreshToken: result.getRefreshToken().getToken().substring(0, 20) + '...'
+                        }, null, 2)}</pre>`;
+                },
+                onFailure: function(err) {
+                    authResult.innerHTML = `<p style="color: red;">Authentication failed: ${err.message}</p>`;
+                    console.error(err);
+                }
+            });
+        }
+        
+        // Get recordings function
+        function getRecordings() {
+            const apiResult = document.getElementById('api-result');
+            
+            if (!idToken) {
+                apiResult.innerHTML = '<p style="color: red;">Please login first</p>';
+                return;
+            }
+            
+            const email = document.getElementById('email').value;
+            const apiUrl = `https://nqfzeccch0.execute-api.us-east-1.amazonaws.com/dev/users/${email}/recordings`;
+            
+            apiResult.innerHTML = '<p>Loading...</p>';
+            
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': idToken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                apiResult.innerHTML = `<p style="color: green;">API call successful!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(error => {
+                apiResult.innerHTML = `<p style="color: red;">API call failed: ${error.message}</p>`;
+                console.error(error);
+            });
+        }
+        
+        // Test upload function
+        function testUpload() {
+            const apiResult = document.getElementById('api-result');
+            
+            if (!idToken) {
+                apiResult.innerHTML = '<p style="color: red;">Please login first</p>';
+                return;
+            }
+            
+            const email = document.getElementById('email').value;
+            const apiUrl = `https://nqfzeccch0.execute-api.us-east-1.amazonaws.com/dev/users/${email}/recordings/upload`;
+            
+            apiResult.innerHTML = '<p>Loading...</p>';
+            
+            const requestBody = {
+                userId: email,
+                fileName: 'test-recording.mp3',
+                fileType: 'audio/mp3',
+                description: 'Test Recording'
+            };
+            
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': idToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                apiResult.innerHTML = `<p style="color: green;">API call successful!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(error => {
+                apiResult.innerHTML = `<p style="color: red;">API call failed: ${error.message}</p>`;
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>

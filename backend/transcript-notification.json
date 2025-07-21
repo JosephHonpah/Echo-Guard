@@ -1,8 +1,0 @@
-{
-  "LambdaFunctionConfigurations": [
-    {
-      "LambdaFunctionArn": "arn:aws:lambda:us-east-1:656570226565:function:AnalyzeTranscript",
-      "Events": ["s3:ObjectCreated:*"]
-    }
-  ]
-}

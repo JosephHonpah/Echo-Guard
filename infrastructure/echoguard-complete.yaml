@@ -1,0 +1,742 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EchoGuard Voice-to-Text Compliance Logger - Complete Infrastructure with CloudFront'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name'
+  
+  ProjectName:
+    Type: String
+    Default: 'echoguard'
+    Description: 'Project name for resource naming'
+
+Resources:
+  # ============================================================================
+  # S3 BUCKETS
+  # ============================================================================
+  
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-${Environment}-audio-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt UploadProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .wav
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt UploadProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .mp3
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldRecordings
+            Status: Enabled
+            ExpirationInDays: 2555  # 7 years retention
+            NoncurrentVersionExpirationInDays: 30
+
+  TranscriptBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-${Environment}-transcripts-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt TranscriptProcessorFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .json
+
+  # ============================================================================
+  # CLOUDFRONT DISTRIBUTION
+  # ============================================================================
+  
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${ProjectName}-${Environment}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-${Environment}-frontend-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub '${ProjectName} ${Environment} Frontend Distribution'
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # Managed-CORS-S3Origin
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03  # Managed-SecurityHeadersPolicy
+        DefaultRootObject: index.html
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  # ============================================================================
+  # DYNAMODB TABLES
+  # ============================================================================
+  
+  ComplianceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${Environment}-compliance'
+      BillingMode: ON_DEMAND
+      AttributeDefinitions:
+        - AttributeName: recordingId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: recordingId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # ============================================================================
+  # SNS TOPICS
+  # ============================================================================
+  
+  TranscribeNotificationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-${Environment}-transcribe-notifications'
+      DisplayName: 'EchoGuard Transcribe Notifications'
+
+  AnalysisNotificationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-${Environment}-analysis-notifications'
+      DisplayName: 'EchoGuard Analysis Notifications'
+
+  GeneralNotificationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-${Environment}-general-notifications'
+      DisplayName: 'EchoGuard General Notifications'
+
+  # ============================================================================
+  # IAM ROLES
+  # ============================================================================
+  
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${Environment}-lambda-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: EchoGuardLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub '${AudioBucket}/*'
+                  - !Sub '${TranscriptBucket}/*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt ComplianceTable.Arn
+                  - !Sub '${ComplianceTable.Arn}/index/*'
+              - Effect: Allow
+                Action:
+                  - transcribe:StartTranscriptionJob
+                  - transcribe:GetTranscriptionJob
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref TranscribeNotificationsTopic
+                  - !Ref AnalysisNotificationsTopic
+                  - !Ref GeneralNotificationsTopic
+
+  TranscribeServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${Environment}-transcribe-service-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: transcribe.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: TranscribeS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub '${AudioBucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub '${TranscriptBucket}/*'
+
+  # ============================================================================
+  # LAMBDA FUNCTIONS
+  # ============================================================================
+  
+  UploadProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${Environment}-upload-processor'
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          AUDIO_BUCKET: !Ref AudioBucket
+          TRANSCRIPT_BUCKET: !Ref TranscriptBucket
+          COMPLIANCE_TABLE: !Ref ComplianceTable
+          TRANSCRIBE_TOPIC: !Ref TranscribeNotificationsTopic
+          TRANSCRIBE_ROLE: !GetAtt TranscribeServiceRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          import uuid
+          from datetime import datetime
+          
+          s3 = boto3.client('s3')
+          transcribe = boto3.client('transcribe')
+          dynamodb = boto3.resource('dynamodb')
+          sns = boto3.client('sns')
+          
+          def lambda_handler(event, context):
+              try:
+                  # Process S3 event
+                  for record in event['Records']:
+                      bucket = record['s3']['bucket']['name']
+                      key = record['s3']['object']['key']
+                      
+                      # Generate unique job name
+                      job_name = f"transcribe-{uuid.uuid4()}"
+                      
+                      # Start transcription job
+                      transcribe.start_transcription_job(
+                          TranscriptionJobName=job_name,
+                          Media={'MediaFileUri': f's3://{bucket}/{key}'},
+                          MediaFormat=key.split('.')[-1],
+                          LanguageCode='en-US',
+                          OutputBucketName=os.environ['TRANSCRIPT_BUCKET'],
+                          Settings={
+                              'ShowSpeakerLabels': True,
+                              'MaxSpeakerLabels': 10
+                          }
+                      )
+                      
+                      # Store initial record in DynamoDB
+                      table = dynamodb.Table(os.environ['COMPLIANCE_TABLE'])
+                      table.put_item(
+                          Item={
+                              'recordingId': key,
+                              'timestamp': int(datetime.now().timestamp()),
+                              'status': 'transcribing',
+                              'transcriptionJob': job_name,
+                              'audioLocation': f's3://{bucket}/{key}'
+                          }
+                      )
+                      
+                      # Send processing notification
+                      sns.publish(
+                          TopicArn=os.environ['TRANSCRIBE_TOPIC'],
+                          Message=json.dumps({
+                              'recordingId': key,
+                              'status': 'transcription_started',
+                              'jobName': job_name
+                          }),
+                          Subject='Transcription Started'
+                      )
+                  
+                  return {'statusCode': 200, 'body': 'Processing initiated'}
+              
+              except Exception as e:
+                  print(f"Error: {str(e)}")
+                  return {'statusCode': 500, 'body': str(e)}
+
+  TranscriptProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${Environment}-transcript-processor'
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 900
+      Environment:
+        Variables:
+          COMPLIANCE_TABLE: !Ref ComplianceTable
+          ANALYSIS_TOPIC: !Ref AnalysisNotificationsTopic
+          GENERAL_TOPIC: !Ref GeneralNotificationsTopic
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+          from datetime import datetime
+          
+          s3 = boto3.client('s3')
+          dynamodb = boto3.resource('dynamodb')
+          bedrock = boto3.client('bedrock-runtime')
+          sns = boto3.client('sns')
+          
+          def lambda_handler(event, context):
+              try:
+                  for record in event['Records']:
+                      bucket = record['s3']['bucket']['name']
+                      key = record['s3']['object']['key']
+                      
+                      # Get transcript from S3
+                      response = s3.get_object(Bucket=bucket, Key=key)
+                      transcript_data = json.loads(response['Body'].read())
+                      transcript_text = transcript_data['results']['transcripts'][0]['transcript']
+                      
+                      # Analyze with Bedrock
+                      bedrock_analysis = analyze_with_bedrock(transcript_text)
+                      
+                      # Analyze with Kiro AI (simulated)
+                      kiro_analysis = analyze_with_kiro_ai(transcript_text)
+                      
+                      # Combine results
+                      combined_score = calculate_combined_score(bedrock_analysis, kiro_analysis)
+                      
+                      # Update DynamoDB
+                      table = dynamodb.Table(os.environ['COMPLIANCE_TABLE'])
+                      recording_id = key.replace('.json', '')
+                      
+                      table.update_item(
+                          Key={'recordingId': recording_id},
+                          UpdateExpression='SET #status = :status, transcript = :transcript, bedrockAnalysis = :bedrock, kiroAnalysis = :kiro, complianceScore = :score, analyzedAt = :analyzed',
+                          ExpressionAttributeNames={'#status': 'status'},
+                          ExpressionAttributeValues={
+                              ':status': 'analyzed',
+                              ':transcript': transcript_text,
+                              ':bedrock': bedrock_analysis,
+                              ':kiro': kiro_analysis,
+                              ':score': combined_score,
+                              ':analyzed': int(datetime.now().timestamp())
+                          }
+                      )
+                      
+                      # Send alert if high risk
+                      if combined_score > 0.7:
+                          sns.publish(
+                              TopicArn=os.environ['ANALYSIS_TOPIC'],
+                              Message=json.dumps({
+                                  'recordingId': recording_id,
+                                  'complianceScore': combined_score,
+                                  'issues': bedrock_analysis.get('issues', []) + kiro_analysis.get('issues', [])
+                              }),
+                              Subject=f'High Risk Compliance Alert - Score: {combined_score}'
+                          )
+                  
+                  return {'statusCode': 200, 'body': 'Analysis completed'}
+              
+              except Exception as e:
+                  print(f"Error: {str(e)}")
+                  return {'statusCode': 500, 'body': str(e)}
+          
+          def analyze_with_bedrock(transcript):
+              # Bedrock analysis implementation
+              prompt = f"""
+              Analyze the following transcript for compliance issues:
+              
+              {transcript}
+              
+              Identify potential compliance violations and assign a risk score (0-1).
+              Return JSON format with 'score' and 'issues' fields.
+              """
+              
+              try:
+                  response = bedrock.invoke_model(
+                      modelId='anthropic.claude-3-sonnet-20240229-v1:0',
+                      body=json.dumps({
+                          'anthropic_version': 'bedrock-2023-05-31',
+                          'max_tokens': 1000,
+                          'messages': [{'role': 'user', 'content': prompt}]
+                      })
+                  )
+                  
+                  result = json.loads(response['body'].read())
+                  content = result['content'][0]['text']
+                  return json.loads(content)
+              except:
+                  return {'score': 0.0, 'issues': []}
+          
+          def analyze_with_kiro_ai(transcript):
+              # Kiro AI analysis simulation
+              financial_keywords = ['money', 'payment', 'transfer', 'account', 'investment', 'loan']
+              risk_keywords = ['unauthorized', 'illegal', 'fraud', 'violation', 'breach']
+              
+              issues = []
+              score = 0.0
+              
+              for keyword in financial_keywords:
+                  if keyword.lower() in transcript.lower():
+                      score += 0.1
+              
+              for keyword in risk_keywords:
+                  if keyword.lower() in transcript.lower():
+                      score += 0.3
+                      issues.append(f"Potential risk keyword detected: {keyword}")
+              
+              return {'score': min(score, 1.0), 'issues': issues}
+          
+          def calculate_combined_score(bedrock_result, kiro_result):
+              # Weighted combination: 60% Bedrock, 40% Kiro
+              return (bedrock_result['score'] * 0.6) + (kiro_result['score'] * 0.4)
+
+  # ============================================================================
+  # API GATEWAY
+  # ============================================================================
+  
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub '${ProjectName}-${Environment}-api'
+      Description: 'EchoGuard Compliance API'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ComplianceLogsMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Environment
+
+  ComplianceLogsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: 'compliance-logs'
+
+  ComplianceLogsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ComplianceLogsResource
+      HttpMethod: GET
+      AuthorizationType: AWS_IAM
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations'
+
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${Environment}-api'
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          COMPLIANCE_TABLE: !Ref ComplianceTable
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          from boto3.dynamodb.conditions import Key
+          
+          dynamodb = boto3.resource('dynamodb')
+          
+          def lambda_handler(event, context):
+              try:
+                  table = dynamodb.Table(os.environ['COMPLIANCE_TABLE'])
+                  
+                  if event['httpMethod'] == 'GET':
+                      # Get all compliance logs
+                      response = table.scan()
+                      items = response['Items']
+                      
+                      return {
+                          'statusCode': 200,
+                          'headers': {
+                              'Content-Type': 'application/json',
+                              'Access-Control-Allow-Origin': '*'
+                          },
+                          'body': json.dumps(items, default=str)
+                      }
+                  
+                  return {
+                      'statusCode': 405,
+                      'body': json.dumps({'error': 'Method not allowed'})
+                  }
+              
+              except Exception as e:
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({'error': str(e)})
+                  }
+
+  # ============================================================================
+  # LAMBDA PERMISSIONS
+  # ============================================================================
+  
+  UploadProcessorS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UploadProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub '${AudioBucket}/*'
+
+  TranscriptProcessorS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TranscriptProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub '${TranscriptBucket}/*'
+
+  ApiGatewayLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
+
+  # ============================================================================
+  # COGNITO USER POOL
+  # ============================================================================
+  
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${ProjectName}-${Environment}-users'
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${ProjectName}-${Environment}-client'
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub '${ProjectName}-${Environment}-identity'
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+
+Outputs:
+  AudioBucketName:
+    Description: 'S3 bucket for audio files'
+    Value: !Ref AudioBucket
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-audio-bucket'
+
+  TranscriptBucketName:
+    Description: 'S3 bucket for transcripts'
+    Value: !Ref TranscriptBucket
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-transcript-bucket'
+
+  FrontendBucketName:
+    Description: 'S3 bucket for frontend static files'
+    Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-frontend-bucket'
+
+  ComplianceTableName:
+    Description: 'DynamoDB table for compliance data'
+    Value: !Ref ComplianceTable
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-compliance-table'
+
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-api-endpoint'
+
+  UserPoolId:
+    Description: 'Cognito User Pool ID'
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-user-pool-id'
+
+  UserPoolClientId:
+    Description: 'Cognito User Pool Client ID'
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-user-pool-client-id'
+
+  IdentityPoolId:
+    Description: 'Cognito Identity Pool ID'
+    Value: !Ref IdentityPool
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-identity-pool-id'
+
+  CloudFrontDistributionId:
+    Description: 'CloudFront Distribution ID'
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-cloudfront-id'
+
+  CloudFrontDomainName:
+    Description: 'CloudFront Distribution Domain Name'
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-cloudfront-domain'
+
+  ApplicationURL:
+    Description: 'HTTPS URL for the EchoGuard application'
+    Value: !Sub 'https://${CloudFrontDistribution.DomainName}'
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-app-url'
+
+  TranscribeNotificationsTopicArn:
+    Description: 'SNS topic for transcribe notifications'
+    Value: !Ref TranscribeNotificationsTopic
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-transcribe-topic'
+
+  AnalysisNotificationsTopicArn:
+    Description: 'SNS topic for analysis notifications'
+    Value: !Ref AnalysisNotificationsTopic
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-analysis-topic'
+
+  GeneralNotificationsTopicArn:
+    Description: 'SNS topic for general notifications'
+    Value: !Ref GeneralNotificationsTopic
+    Export:
+      Name: !Sub '${ProjectName}-${Environment}-general-topic'

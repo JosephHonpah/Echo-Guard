@@ -1,9 +1,0 @@
-{
-  "UserPoolId": "us-east-1_q03tLrCfS",
-  "ClientName": "EchoGuardWebClient",
-  "GenerateSecret": false,
-  "ExplicitAuthFlows": [
-    "ALLOW_USER_PASSWORD_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH"
-  ]
-}
