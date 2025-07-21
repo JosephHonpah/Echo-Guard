@@ -11,7 +11,7 @@ const API_CONFIG = {
   
   // For demo mode, set to true to use simulated responses
   // Set to false to use the real backend
-  demoMode: true // Keep as true for now until backend is fully tested
+  demoMode: false // Using real backend
 };
 
 /**

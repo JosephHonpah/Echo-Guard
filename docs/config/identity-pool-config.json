@@ -1,0 +1,10 @@
+{
+  "IdentityPoolName": "EchoGuardIdentityPool",
+  "AllowUnauthenticatedIdentities": false,
+  "CognitoIdentityProviders": [
+    {
+      "ProviderName": "cognito-idp.us-east-1.amazonaws.com/us-east-1_CAVA949mz",
+      "ClientId": "31pugqqnb64lq0vkfnim20f09l"
+    }
+  ]
+}
