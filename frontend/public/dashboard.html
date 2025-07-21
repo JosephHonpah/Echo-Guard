@@ -381,13 +381,49 @@
                 uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Uploading file...</div>';
                 
                 // Direct S3 upload without using the API client
-                const uploadResult = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: file,
-                    headers: {
-                        'Content-Type': fileType
-                    }
-                });
+                console.log('Starting direct S3 upload to URL:', uploadUrl);
+                
+                try {
+                    // Use XMLHttpRequest instead of fetch for better compatibility with S3 pre-signed URLs
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', uploadUrl, true);
+                    xhr.setRequestHeader('Content-Type', fileType);
+                    
+                    // Create a promise to handle the async XHR
+                    const uploadResult = await new Promise((resolve, reject) => {
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                console.log('Upload successful, status:', xhr.status);
+                                resolve({
+                                    ok: true,
+                                    status: xhr.status,
+                                    statusText: xhr.statusText
+                                });
+                            } else {
+                                console.error('Upload failed, status:', xhr.status);
+                                reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+                            }
+                        };
+                        
+                        xhr.onerror = function() {
+                            console.error('XHR error during upload');
+                            reject(new Error('Network error during upload'));
+                        };
+                        
+                        xhr.upload.onprogress = function(e) {
+                            if (e.lengthComputable) {
+                                const percentComplete = (e.loaded / e.total) * 100;
+                                console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+                            }
+                        };
+                        
+                        // Send the file
+                        xhr.send(file);
+                    });
+                } catch (uploadError) {
+                    console.error('Error during XHR upload:', uploadError);
+                    throw uploadError;
+                }
                 
                 console.log('Upload result status:', uploadResult.status);
                 
