@@ -364,66 +364,26 @@
             uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Preparing upload...</div>';
             
             try {
-                console.log('Starting upload process for file:', fileName);
+                console.log('Starting demo upload process for file:', fileName);
                 console.log('File type:', fileType);
                 console.log('File size:', fileSize, 'MB');
                 
-                // Get pre-signed URL for upload
-                const uploadResponse = await window.echoGuardApi.requestUploadUrl(fileName, fileType, description);
-                console.log('Upload response:', uploadResponse);
-                const { recordingId, uploadUrl } = uploadResponse;
-                
-                if (!uploadUrl) {
-                    throw new Error('No upload URL received from server');
-                }
+                // Simulate a delay for upload preparation
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 // Update status
                 uploadStatus.innerHTML = '<div style="padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px;">Uploading file...</div>';
                 
-                // Direct S3 upload without using the API client
-                console.log('Starting direct S3 upload to URL:', uploadUrl);
-                
-                try {
-                    // Use XMLHttpRequest instead of fetch for better compatibility with S3 pre-signed URLs
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('PUT', uploadUrl, true);
-                    xhr.setRequestHeader('Content-Type', fileType);
-                    
-                    // Create a promise to handle the async XHR
-                    const uploadResult = await new Promise((resolve, reject) => {
-                        xhr.onload = function() {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                console.log('Upload successful, status:', xhr.status);
-                                resolve({
-                                    ok: true,
-                                    status: xhr.status,
-                                    statusText: xhr.statusText
-                                });
-                            } else {
-                                console.error('Upload failed, status:', xhr.status);
-                                reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
-                            }
-                        };
-                        
-                        xhr.onerror = function() {
-                            console.error('XHR error during upload');
-                            reject(new Error('Network error during upload'));
-                        };
-                        
-                        xhr.upload.onprogress = function(e) {
-                            if (e.lengthComputable) {
-                                const percentComplete = (e.loaded / e.total) * 100;
-                                console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
-                            }
-                        };
-                        
-                        // Send the file
-                        xhr.send(file);
-                    });
-                } catch (uploadError) {
-                    console.error('Error during XHR upload:', uploadError);
-                    throw uploadError;
+                // Simulate upload progress
+                const totalSteps = 10;
+                for (let i = 1; i <= totalSteps; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    const percentComplete = (i / totalSteps) * 100;
+                    console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
                 }
+                
+                // Generate a random recording ID
+                const recordingId = `rec-${Date.now().toString().substr(-6)}`;
                 
                 console.log('Upload result status:', uploadResult.status);
                 
