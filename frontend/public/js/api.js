@@ -139,16 +139,31 @@ async function uploadFile(uploadUrl, file) {
     return new Promise(resolve => setTimeout(resolve, 1500));
   }
   
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type
+  try {
+    console.log('Uploading to URL:', uploadUrl);
+    console.log('File type:', file.type);
+    console.log('File size:', file.size);
+    
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type
+      },
+      mode: 'cors'
+    });
+    
+    console.log('Upload response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('Upload failed with status:', response.status);
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
     }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
   }
 }
 

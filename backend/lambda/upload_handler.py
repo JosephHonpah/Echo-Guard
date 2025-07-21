@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 'Key': f"{user_id}/{recording_id}/{file_name}",
                 'ContentType': file_type
             },
-            ExpiresIn=300  # URL valid for 5 minutes
+            ExpiresIn=3600  # URL valid for 60 minutes
         )
         
         # Store recording metadata in DynamoDB
