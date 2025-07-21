@@ -1,0 +1,507 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EchoGuard - Voice-to-Text Compliance Logger Infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - test
+      - prod
+    Description: Deployment environment
+
+Resources:
+  # S3 Buckets
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub echoguard-audio-${AWS::AccountId}-${Environment}
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldFiles
+            Status: Enabled
+            ExpirationInDays: 90
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3600
+
+  TranscriptBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub echoguard-transcripts-${AWS::AccountId}-${Environment}
+      VersioningConfiguration:
+        Status: Enabled
+
+  # DynamoDB Tables
+  RecordingsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub echoguard-recordings-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: recordingId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: recordingId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIdIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  ResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub echoguard-results-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: recordingId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: recordingId
+          KeyType: HASH
+
+  # SNS Topics
+  TranscribeTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub echoguard-transcribe-${Environment}
+      DisplayName: EchoGuard Transcribe
+
+  AnalysisTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub echoguard-analysis-${Environment}
+      DisplayName: EchoGuard Analysis
+
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub echoguard-notifications-${Environment}
+      DisplayName: EchoGuard Notifications
+
+  # IAM Roles
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub echoguard-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: EchoGuardLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt AudioBucket.Arn
+                  - !Sub ${AudioBucket.Arn}/*
+                  - !GetAtt TranscriptBucket.Arn
+                  - !Sub ${TranscriptBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt RecordingsTable.Arn
+                  - !GetAtt ResultsTable.Arn
+                  - !Sub ${RecordingsTable.Arn}/index/*
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref TranscribeTopic
+                  - !Ref AnalysisTopic
+                  - !Ref NotificationTopic
+              - Effect: Allow
+                Action:
+                  - transcribe:StartTranscriptionJob
+                  - transcribe:GetTranscriptionJob
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: '*'
+
+  # Lambda Functions
+  UploadHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-upload-handler-${Environment}
+      Handler: upload_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          AUDIO_BUCKET: !Ref AudioBucket
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          TRANSCRIBE_TOPIC_ARN: !Ref TranscribeTopic
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for upload_handler.py code
+          # This will be replaced during deployment
+
+  TranscribeHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-transcribe-handler-${Environment}
+      Handler: transcribe_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          AUDIO_BUCKET: !Ref AudioBucket
+          TRANSCRIPT_BUCKET: !Ref TranscriptBucket
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          ANALYSIS_TOPIC_ARN: !Ref AnalysisTopic
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for transcribe_handler.py code
+          # This will be replaced during deployment
+
+  TranscribeCompleteHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-transcribe-complete-handler-${Environment}
+      Handler: transcribe_complete_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          TRANSCRIPT_BUCKET: !Ref TranscriptBucket
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          ANALYSIS_TOPIC_ARN: !Ref AnalysisTopic
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for transcribe_complete_handler.py code
+          # This will be replaced during deployment
+
+  AnalysisHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-analysis-handler-${Environment}
+      Handler: analysis_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          TRANSCRIPT_BUCKET: !Ref TranscriptBucket
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          RESULTS_TABLE: !Ref ResultsTable
+          NOTIFICATION_TOPIC_ARN: !Ref NotificationTopic
+          KIRO_API_ENDPOINT: !Sub '{{resolve:ssm:/echoguard/${Environment}/kiro_api_endpoint}}'
+          KIRO_API_KEY: !Sub '{{resolve:ssm:/echoguard/${Environment}/kiro_api_key}}'
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for analysis_handler.py code
+          # This will be replaced during deployment
+
+  GetRecordingsHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-get-recordings-handler-${Environment}
+      Handler: get_recordings_handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          RESULTS_TABLE: !Ref ResultsTable
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for get_recordings_handler.py code
+          # This will be replaced during deployment
+
+  GetRecordingDetailsHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub echoguard-get-recording-details-handler-${Environment}
+      Handler: get_recordings_handler.get_recording_details
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          RECORDINGS_TABLE: !Ref RecordingsTable
+          RESULTS_TABLE: !Ref ResultsTable
+          ENVIRONMENT: !Ref Environment
+      Code:
+        ZipFile: |
+          # Placeholder for get_recordings_handler.py code
+          # This will be replaced during deployment
+
+  # SNS Subscriptions
+  TranscribeTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref TranscribeTopic
+      Protocol: lambda
+      Endpoint: !GetAtt TranscribeHandlerFunction.Arn
+
+  AnalysisTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AnalysisTopic
+      Protocol: lambda
+      Endpoint: !GetAtt AnalysisHandlerFunction.Arn
+
+  # Lambda Permissions
+  TranscribeHandlerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TranscribeHandlerFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref TranscribeTopic
+
+  AnalysisHandlerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AnalysisHandlerFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref AnalysisTopic
+
+  # CloudWatch Event Rule for Transcribe Job Completion
+  TranscribeCompletionRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub echoguard-transcribe-completion-${Environment}
+      Description: "Rule to detect Amazon Transcribe job completion"
+      EventPattern:
+        source:
+          - "aws.transcribe"
+        detail-type:
+          - "Transcribe Job State Change"
+        detail:
+          TranscriptionJobStatus:
+            - "COMPLETED"
+            - "FAILED"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt TranscribeCompleteHandlerFunction.Arn
+          Id: "TranscribeCompleteTarget"
+
+  TranscribeCompletePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TranscribeCompleteHandlerFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt TranscribeCompletionRule.Arn
+
+  # API Gateway
+  EchoGuardApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub echoguard-api-${Environment}
+      Description: EchoGuard API
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Resources and Methods
+  UsersResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ParentId: !GetAtt EchoGuardApi.RootResourceId
+      PathPart: "users"
+
+  UserIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ParentId: !Ref UsersResource
+      PathPart: "{userId}"
+
+  RecordingsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ParentId: !Ref UserIdResource
+      PathPart: "recordings"
+
+  RecordingIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ParentId: !Ref RecordingsResource
+      PathPart: "{recordingId}"
+
+  UploadResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ParentId: !Ref RecordingsResource
+      PathPart: "upload"
+
+  # API Methods
+  GetRecordingsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ResourceId: !Ref RecordingsResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetRecordingsHandlerFunction.Arn}/invocations
+
+  GetRecordingDetailsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ResourceId: !Ref RecordingIdResource
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetRecordingDetailsHandlerFunction.Arn}/invocations
+
+  UploadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      ResourceId: !Ref UploadResource
+      HttpMethod: POST
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiAuthorizer
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UploadHandlerFunction.Arn}/invocations
+
+  # API Authorizer
+  ApiAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: !Sub echoguard-cognito-authorizer-${Environment}
+      RestApiId: !Ref EchoGuardApi
+      Type: COGNITO_USER_POOLS
+      IdentitySource: method.request.header.Authorization
+      ProviderARNs:
+        - !Sub '{{resolve:ssm:/echoguard/${Environment}/cognito_user_pool_arn}}'
+
+  # API Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - GetRecordingsMethod
+      - GetRecordingDetailsMethod
+      - UploadMethod
+    Properties:
+      RestApiId: !Ref EchoGuardApi
+      StageName: !Ref Environment
+
+  # Lambda Permissions for API Gateway
+  GetRecordingsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetRecordingsHandlerFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EchoGuardApi}/${Environment}/GET/users/{userId}/recordings
+
+  GetRecordingDetailsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetRecordingDetailsHandlerFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EchoGuardApi}/${Environment}/GET/users/{userId}/recordings/{recordingId}
+
+  UploadPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UploadHandlerFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${EchoGuardApi}/${Environment}/POST/users/{userId}/recordings/upload
+
+Outputs:
+  ApiUrl:
+    Description: URL of the API Gateway endpoint
+    Value: !Sub https://${EchoGuardApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+
+  AudioBucketName:
+    Description: Name of the S3 bucket for audio files
+    Value: !Ref AudioBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-AudioBucketName
+
+  TranscriptBucketName:
+    Description: Name of the S3 bucket for transcripts
+    Value: !Ref TranscriptBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-TranscriptBucketName
+
+  RecordingsTableName:
+    Description: Name of the DynamoDB table for recordings
+    Value: !Ref RecordingsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-RecordingsTableName
+
+  ResultsTableName:
+    Description: Name of the DynamoDB table for analysis results
+    Value: !Ref ResultsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-ResultsTableName
