@@ -1,37 +1,59 @@
 # EchoGuard Quick Start Guide
 
-## Access EchoGuard
+This guide will help you quickly get started with EchoGuard.
 
-**URL**: Contact your administrator for the EchoGuard URL specific to your organization
+## Live Demo
 
-## First-Time Setup
+Try the live demo at: [https://d4t0hj4peur25.cloudfront.net/auth.html](https://d4t0hj4peur25.cloudfront.net/auth.html)
 
-1. **Create an Account**:
-   - Click "Create Account" on the login page
-   - Enter your email and create a password
-   - Verify your email with the code sent to your inbox
+**Test Credentials**:
+- **Email**: test@example.com
+- **Password**: Test1234!
 
-2. **Login**:
-   - Enter your credentials on the login page
+## 5-Minute Quick Start
 
-## Upload Your First Recording
+### 1. Access the Application
 
-1. Click "Upload" in the navigation menu
-2. Select an audio file (MP3, WAV, M4A, or FLAC)
-3. Add optional description and category
+Open your web browser and navigate to the EchoGuard URL.
+
+### 2. Log In or Sign Up
+
+- **Existing Users**: Enter your email and password, then click "Login"
+- **New Users**: Click the "Sign Up" tab, create an account, and verify your email
+
+### 3. Upload Your First Recording
+
+1. Click the "Upload" tab in the navigation
+2. Drag and drop an audio file or click "Choose File"
+3. Add an optional description
 4. Click "Upload"
-5. Wait for the confirmation message
+5. Wait for processing to complete
 
-## View Compliance Results
+### 4. View Compliance Results
 
-1. Go to "Dashboard" to see all your recordings
-2. Click on any recording to view:
-   - Transcript
-   - Compliance score
-   - Detected issues
-   - Recommendations
+1. After processing completes, click "View detailed analysis"
+2. Review the compliance score and identified issues
+3. Read recommendations for addressing any compliance concerns
 
-## Get Help
+### 5. Explore the Dashboard
 
-- Email: support@echoguard.example.com
-- In-app chat: Click the "?" icon in the bottom right corner
+1. Click the "Dashboard" tab
+2. View all your recordings and their compliance scores
+3. Check your overall compliance metrics
+
+## Next Steps
+
+- Upload more recordings to build your compliance history
+- Review the [User Guide](USER_GUIDE.md) for detailed instructions
+- Configure notification settings in the Settings tab
+
+## Supported File Formats
+
+- MP3
+- WAV
+- M4A
+- FLAC
+
+## Getting Help
+
+If you need assistance, please refer to the [User Guide](USER_GUIDE.md) or contact support at support@echoguard.example.com.

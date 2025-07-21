@@ -1,94 +1,143 @@
 # EchoGuard User Guide
 
-## Accessing EchoGuard
+Welcome to EchoGuard! This guide will help you get started with using the EchoGuard voice compliance monitoring system.
 
-After deployment, EchoGuard will be available at your configured frontend URL.
+## Table of Contents
 
-**Note:** Your system administrator will provide the specific URL for your EchoGuard instance.
+1. [Getting Started](#getting-started)
+2. [Dashboard Overview](#dashboard-overview)
+3. [Uploading Recordings](#uploading-recordings)
+4. [Viewing Compliance Results](#viewing-compliance-results)
+5. [Understanding Compliance Scores](#understanding-compliance-scores)
+6. [Managing Your Account](#managing-your-account)
+7. [Troubleshooting](#troubleshooting)
 
-## User Registration and Login
+## Getting Started
 
-1. **Register a New Account**:
-   - Visit the EchoGuard website
-   - Click "Create Account"
-   - Enter your email address, password, and other required information
-   - Check your email for a verification code
-   - Enter the verification code to complete registration
+### Accessing EchoGuard
 
-2. **Login**:
-   - Enter your email and password
-   - If you've forgotten your password, click "Forgot Password" to reset it
+1. Open your web browser and navigate to the EchoGuard URL: [https://d4t0hj4peur25.cloudfront.net/auth.html](https://d4t0hj4peur25.cloudfront.net/auth.html)
 
-## Uploading Audio Recordings
+### Creating an Account
 
-1. **Navigate to Upload Page**:
-   - After logging in, click on "Upload" in the navigation menu
+1. Click on the "Sign Up" tab
+2. Enter your email address
+3. Create a strong password (must include uppercase, lowercase, numbers, and special characters)
+4. Click "Sign Up"
+5. Check your email for a verification code
+6. Enter the verification code in the verification form
+7. Once verified, you can log in with your credentials
 
-2. **Select Audio Files**:
-   - Click "Choose File" or drag and drop audio files onto the upload area
-   - Supported formats: MP3, WAV, M4A, FLAC (up to 100MB per file)
+### Logging In
 
-3. **Add Metadata (Optional)**:
-   - Enter a description for the recording
-   - Select a category (e.g., "Customer Call", "Meeting", "Interview")
-   - Add any relevant tags
+1. Enter your email address and password
+2. Click "Login"
+3. You will be redirected to the dashboard
 
-4. **Upload**:
-   - Click the "Upload" button
-   - A progress bar will show the upload status
-   - Wait for confirmation that the upload is complete
+## Dashboard Overview
 
-## Viewing Compliance Analysis
+The EchoGuard dashboard is divided into several sections:
 
-1. **Dashboard**:
-   - The main dashboard shows recent uploads and their compliance status
-   - Green: High compliance (80-100%)
-   - Yellow: Moderate compliance (60-79%)
-   - Red: Low compliance (0-59%)
+### Navigation Tabs
 
-2. **Detailed Analysis**:
-   - Click on any recording to view detailed analysis
-   - You'll see:
-     - Transcript of the audio
-     - Overall compliance score
-     - Specific compliance issues detected
-     - Recommendations for improvement
-     - Dual analysis from both AI systems (Bedrock and Kiro)
+- **Dashboard**: View your recordings and compliance metrics
+- **Upload**: Upload new audio recordings
+- **Settings**: Manage your account settings
 
-3. **Filtering and Searching**:
-   - Use the search bar to find specific recordings
-   - Filter by date, compliance score, or category
+### Recent Recordings
 
-## Receiving Alerts
+This section displays your most recent audio recordings with:
+- Recording title/description
+- Upload date
+- Duration
+- Compliance score (color-coded by risk level)
 
-1. **Email Alerts**:
-   - You'll receive email notifications for low compliance scores
-   - Configure alert thresholds in your profile settings
+### Compliance Overview
 
-2. **Dashboard Notifications**:
-   - The dashboard shows real-time alerts for new compliance issues
+This section provides aggregate statistics:
+- Average compliance score
+- Total recordings analyzed
+- Recordings with compliance issues
 
-## Direct Upload API (For Developers)
+## Uploading Recordings
 
-For automated uploads or integration with other systems:
+1. Click on the "Upload" tab in the navigation
+2. Drag and drop an audio file onto the upload area, or click "Choose File" to select a file
+   - Supported formats: MP3, WAV, M4A, FLAC
+3. Enter an optional description for the recording
+4. Click "Upload"
+5. Wait for the upload and processing to complete
+   - You will see progress indicators during this process
+6. Once complete, you will see a success message with your compliance score
+7. Click "View detailed analysis" to see the full results
 
-```
-POST https://api.echoguard.example.com/upload
-Authorization: Bearer YOUR_API_KEY
-Content-Type: multipart/form-data
+## Viewing Compliance Results
 
-Form fields:
-- file: The audio file
-- description: (Optional) Description of the recording
-- category: (Optional) Category of the recording
-```
+1. From the dashboard, click on any recording card to view its details
+2. The detailed view includes:
+   - Transcription of the audio
+   - Overall compliance score
+   - List of identified compliance issues
+   - Recommendations for addressing issues
+
+### Compliance Issues
+
+Each identified issue includes:
+- Source (Bedrock or Kiro AI)
+- Description of the issue
+- Risk level (High, Medium, Low)
+- Recommendation for addressing the issue
+
+## Understanding Compliance Scores
+
+EchoGuard uses a 0-100 scoring system for compliance:
+
+- **90-100**: High compliance (Green) - Few or no issues detected
+- **70-89**: Medium compliance (Yellow) - Some issues that should be addressed
+- **0-69**: Low compliance (Red) - Significant issues requiring immediate attention
+
+Scores are calculated based on:
+- Number of issues detected
+- Severity of each issue
+- Regulatory impact of issues
+- Industry-specific compliance factors
+
+## Managing Your Account
+
+### Updating Your Profile
+
+1. Click on the "Settings" tab
+2. View your account information
+3. Click "Change Password" to update your password
+
+### Notification Settings
+
+1. Click on the "Settings" tab
+2. Under "Notification Settings", you can:
+   - Enable/disable email alerts for compliance issues
+   - Enable/disable weekly compliance reports
 
 ## Troubleshooting
 
-- **Upload Issues**: Ensure your file is under 100MB and in a supported format
-- **Playback Problems**: Try downloading the file and playing it locally
-- **Missing Analysis**: Analysis typically takes 1-5 minutes to complete
+### Login Issues
 
-## Support
+- **Forgot Password**: Click the "Forgot Password" link on the login page
+- **Account Locked**: Contact support if your account becomes locked
+- **Verification Code Not Received**: Check your spam folder or request a new code
 
-For assistance, contact support at support@echoguard.example.com or use the in-app chat feature.
+### Upload Problems
+
+- **File Too Large**: Try compressing the audio file or splitting it into smaller segments
+- **Unsupported Format**: Convert the file to a supported format (MP3, WAV, M4A, FLAC)
+- **Upload Fails**: Check your internet connection and try again
+
+### Playback Issues
+
+- **Audio Not Playing**: Ensure your browser supports the audio format
+- **Poor Audio Quality**: Try uploading a higher quality recording
+
+## Getting Help
+
+If you encounter any issues not covered in this guide, please contact support at:
+- Email: support@echoguard.example.com
+- Support Portal: [https://support.echoguard.example.com](https://support.echoguard.example.com)
