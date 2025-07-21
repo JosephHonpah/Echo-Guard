@@ -3,7 +3,9 @@
 ## Overview
 
 EchoGuard uses a serverless architecture built on AWS services to provide a scalable, cost-effective solution for voice compliance monitoring.
+## 🧠 Architecture Overview
 
+![EchoGuard Architecture](EEEEEEEchoguard.drawio.png)
 ## Architecture Diagram
 
 ```
