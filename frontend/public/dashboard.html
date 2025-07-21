@@ -385,6 +385,13 @@
                 // Generate a random recording ID
                 const recordingId = `rec-${Date.now().toString().substr(-6)}`;
                 
+                // Simulate successful upload result
+                const uploadResult = {
+                    ok: true,
+                    status: 200,
+                    statusText: 'OK'
+                };
+                
                 console.log('Upload result status:', uploadResult.status);
                 
                 if (!uploadResult.ok) {
