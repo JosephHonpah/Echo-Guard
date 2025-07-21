@@ -237,16 +237,23 @@
         
         // Check if user is logged in
         window.onload = function() {
+            console.log('Dashboard page loaded, checking for existing session');
             const cognitoUser = userPool.getCurrentUser();
+            console.log('Current user from pool:', cognitoUser);
+            
             if (cognitoUser != null) {
+                console.log('User found in local storage:', cognitoUser.username);
                 cognitoUser.getSession(function(err, session) {
                     if (err) {
-                        console.log(err);
+                        console.error('Session error:', err);
+                        console.log('Redirecting to auth page due to session error');
                         window.location.href = 'auth.html';
                         return;
                     }
                     
+                    console.log('Session valid:', session.isValid());
                     if (session.isValid()) {
+                        console.log('Valid session, staying on dashboard');
                         // Display user email
                         document.getElementById('user-email').textContent = cognitoUser.username;
                         document.getElementById('settings-email').textContent = cognitoUser.username;
@@ -256,11 +263,16 @@
                         
                         // Initialize compliance overview
                         updateComplianceOverview();
+                        
+                        // Load recordings
+                        loadRecordings();
                     } else {
+                        console.log('Invalid session, redirecting to auth page');
                         window.location.href = 'auth.html';
                     }
                 });
             } else {
+                console.log('No user found, redirecting to auth page');
                 window.location.href = 'auth.html';
             }
         };
@@ -491,6 +503,46 @@
             });
             
             dropArea.addEventListener('drop', handleDrop, false);
+        }
+        
+        async function loadRecordings() {
+            try {
+                console.log('Loading recordings from API');
+                const recordings = await window.echoGuardApi.getRecordings();
+                console.log('Recordings loaded:', recordings);
+                
+                if (recordings && recordings.recordings && recordings.recordings.length > 0) {
+                    // Clear existing recordings
+                    const recordingsContainer = document.querySelector('.recordings');
+                    recordingsContainer.innerHTML = '';
+                    
+                    // Add each recording
+                    recordings.recordings.forEach(recording => {
+                        let scoreClass = 'low';
+                        if (recording.complianceScore >= 80) {
+                            scoreClass = 'high';
+                        } else if (recording.complianceScore >= 70) {
+                            scoreClass = 'medium';
+                        }
+                        
+                        const newRecording = document.createElement('div');
+                        newRecording.className = 'recording-card';
+                        newRecording.innerHTML = `
+                            <div class="recording-title">${recording.description || recording.fileName}</div>
+                            <div class="recording-date">${recording.uploadDate}</div>
+                            <div>File: ${recording.fileName}</div>
+                            <div class="compliance-score ${scoreClass}">Compliance: ${recording.complianceScore}%</div>
+                        `;
+                        
+                        recordingsContainer.appendChild(newRecording);
+                    });
+                    
+                    // Update compliance overview
+                    updateComplianceOverview();
+                }
+            } catch (error) {
+                console.error('Error loading recordings:', error);
+            }
         }
     </script>
 </body>

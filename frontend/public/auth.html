@@ -191,8 +191,8 @@
     <script>
         // AWS Cognito configuration
         const poolData = {
-            UserPoolId: 'us-east-1_q03tLrCfS',
-            ClientId: '4ks45uv9681eh9hnevrutksqru'
+            UserPoolId: 'us-east-1_s8Kk4WRpo',
+            ClientId: '5feka1pptsb57glg092tcefr3p'
         };
         
         const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
@@ -200,17 +200,24 @@
         
         // Check if user is already logged in
         window.onload = function() {
-            const cognitoUser = userPool.getCurrentUser();
-            if (cognitoUser != null) {
-                cognitoUser.getSession(function(err, session) {
+            console.log('Auth page loaded, checking for existing session');
+            const currentUser = userPool.getCurrentUser();
+            if (currentUser != null) {
+                console.log('User found in local storage:', currentUser.username);
+                currentUser.getSession(function(err, session) {
                     if (err) {
+                        console.error('Session error:', err);
                         return;
                     }
                     
+                    console.log('Session valid:', session.isValid());
                     if (session.isValid()) {
+                        console.log('Redirecting to dashboard');
                         window.location.href = 'dashboard.html';
                     }
                 });
+            } else {
+                console.log('No user found in local storage');
             }
         };
         
@@ -247,6 +254,9 @@
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
+            console.log('Attempting login for:', email);
+            showLoginMessage('Logging in...', 'success');
+            
             const authenticationData = {
                 Username: email,
                 Password: password
@@ -263,14 +273,22 @@
             
             cognitoUser.authenticateUser(authenticationDetails, {
                 onSuccess: function(result) {
+                    console.log('Login successful');
+                    console.log('ID Token:', result.getIdToken().getJwtToken());
                     showLoginMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Store the tokens
+                    localStorage.setItem('id_token', result.getIdToken().getJwtToken());
+                    localStorage.setItem('access_token', result.getAccessToken().getJwtToken());
                     
                     // Redirect to main page after successful login
                     setTimeout(function() {
+                        console.log('Redirecting to dashboard');
                         window.location.href = 'dashboard.html';
                     }, 1500);
                 },
                 onFailure: function(err) {
+                    console.error('Login failed:', err);
                     showLoginMessage('Login failed: ' + err.message, 'error');
                 }
             });
