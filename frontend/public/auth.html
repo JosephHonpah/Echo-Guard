@@ -272,6 +272,7 @@
             cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
             
             cognitoUser.authenticateUser(authenticationDetails, {
+                authFlow: 'USER_PASSWORD_AUTH',
                 onSuccess: function(result) {
                     console.log('Login successful');
                     console.log('ID Token:', result.getIdToken().getJwtToken());
