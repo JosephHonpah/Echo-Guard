@@ -2,6 +2,11 @@
 
 EchoGuard is a serverless application that transcribes audio recordings, analyzes them for compliance issues using AI, and provides a dashboard for monitoring compliance metrics.
 
+## 🧠 Architecture Overview
+
+![EchoGuard Architecture](EEEEEEEchoguard.drawio.png)
+
+
 ## Live Demo
 
 **URL**: [https://d4t0hj4peur25.cloudfront.net/auth.html](https://d4t0hj4peur25.cloudfront.net/auth.html)
