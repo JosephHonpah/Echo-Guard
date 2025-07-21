@@ -62,16 +62,22 @@ async function apiRequest(path, method = 'GET', body = null) {
       headers: {
         'Authorization': token,
         'Content-Type': 'application/json'
-      }
+      },
+      mode: 'cors',
+      credentials: 'same-origin'
     };
     
     if (body && (method === 'POST' || method === 'PUT')) {
       options.body = JSON.stringify(body);
     }
     
+    console.log(`Making API request to: ${API_CONFIG.apiUrl}${path}`);
+    console.log('Request options:', JSON.stringify(options));
+    
     const response = await fetch(`${API_CONFIG.apiUrl}${path}`, options);
     
     if (!response.ok) {
+      console.error(`API error: ${response.status} ${response.statusText}`);
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
     
