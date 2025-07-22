@@ -115,7 +115,7 @@ EchoGuard leverages Kiro AI for specialized financial compliance analysis:
 ### Installing Kiro IDE
 
 1. **Download Kiro IDE**:
-   - Visit [Kiro AI Developer Portal](https://developer.kiro.ai)
+   - Visit [Kiro AI Developer Portal](https://kiro.dev)
    - Register for a developer account
    - Download the Kiro IDE for your platform (Windows, macOS, Linux)
 
