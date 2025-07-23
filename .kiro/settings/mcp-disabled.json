@@ -12,7 +12,7 @@
     "cloudformation-validator": {
       "command": "python",
       "args": ["-m", "cloudformation_validator_mcp_server"],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": ["validate-template"]
     }
   }
