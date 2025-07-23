@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "aws-docs": {
+      "command": "python",
+      "args": ["-m", "awslabs.aws_documentation_mcp_server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["aws-docs.search"]
+    },
+    "cloudformation-validator": {
+      "command": "python",
+      "args": ["-m", "cloudformation_validator_mcp_server"],
+      "disabled": false,
+      "autoApprove": ["validate-template"]
+    }
+  }
+}
