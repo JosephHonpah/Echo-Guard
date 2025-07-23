@@ -1,0 +1,8 @@
+{
+  "name": "Run EchoGuard Tests",
+  "description": "Run unit and integration tests for EchoGuard",
+  "events": ["save"],
+  "filePattern": "**/*.py",
+  "command": "python -m pytest tests/ -v",
+  "prompt": "Run tests for the EchoGuard Python files that were just modified and report any failures."
+}

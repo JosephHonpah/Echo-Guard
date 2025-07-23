@@ -1,0 +1,7 @@
+{
+  "name": "Update Documentation",
+  "description": "Update documentation when code changes",
+  "events": ["manual"],
+  "command": "echo 'Updating documentation...'",
+  "prompt": "Based on the changes in ${file}, update the relevant documentation in docs/ARCHITECTURE_DETAILED.md to keep it in sync with the implementation."
+}

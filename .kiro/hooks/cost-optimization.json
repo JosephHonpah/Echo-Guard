@@ -1,0 +1,8 @@
+{
+  "name": "Cost Optimization",
+  "description": "Analyze infrastructure for cost optimization opportunities",
+  "events": ["manual"],
+  "filePattern": "infrastructure/**/*.yaml",
+  "command": "echo 'Analyzing cost optimization opportunities...'",
+  "prompt": "Analyze this CloudFormation template for cost optimization opportunities. Identify resources that could be configured more efficiently, suggest serverless alternatives where appropriate, recommend appropriate sizing for resources, and provide specific recommendations for reducing AWS costs while maintaining performance and reliability."
+}

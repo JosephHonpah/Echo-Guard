@@ -1,0 +1,8 @@
+{
+  "name": "Security Review",
+  "description": "Perform a security review of infrastructure code",
+  "events": ["manual"],
+  "filePattern": "infrastructure/**/*.yaml",
+  "command": "echo 'Performing security review...'",
+  "prompt": "Perform a comprehensive security review of this CloudFormation template. Identify potential security vulnerabilities, check for least privilege principles, ensure encryption is properly configured, and verify that best practices for AWS security are being followed. Provide specific recommendations for improvements."
+}

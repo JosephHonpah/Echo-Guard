@@ -1,0 +1,8 @@
+{
+  "name": "Validate CloudFormation",
+  "description": "Validate CloudFormation templates when modified",
+  "events": ["save"],
+  "filePattern": "**/*.yaml",
+  "command": "aws cloudformation validate-template --template-body file://${file}",
+  "prompt": "Validate the CloudFormation template that was just modified and explain any errors or warnings."
+}

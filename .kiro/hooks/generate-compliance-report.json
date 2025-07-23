@@ -1,0 +1,7 @@
+{
+  "name": "Generate Compliance Report",
+  "description": "Generate a compliance report from DynamoDB data",
+  "events": ["manual"],
+  "command": "echo 'Generating compliance report...'",
+  "prompt": "Generate a comprehensive compliance report based on the following DynamoDB data. Identify trends, high-risk areas, and provide recommendations for compliance improvements:\n\n${selection}"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Analyze Transcript",
+  "description": "Analyze a transcript for compliance issues",
+  "events": ["manual"],
+  "command": "echo 'Analyzing transcript...'",
+  "prompt": "Analyze the following transcript for potential compliance issues. Identify any high-risk phrases, regulatory violations, or concerning language. Provide a risk score from 0-10 and list specific issues found:\n\n${selection}"
+}
